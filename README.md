@@ -1,37 +1,105 @@
-# Project Name
+# PassGuard - Password Manager
+
+## Table of Contents
+- [Description](#description)
+- [Features](#features)
+- [Libraries/Tools Used](#librariestools-used)
+- [Installation](#installation)
+- [Usage](#usage)
+- [Folder Structure](#folder-structure)
+- [Contributing](#contributing)
+- [License](#license)
 
 ## Description
-This project is a web application that provides users with a seamless experience by integrating various libraries and tools for notifications, animations, validation, and design. It also securely stores user passwords in the browser's local storage.
+PassGuard is a web application designed to securely manage user passwords. It provides a seamless user experience by integrating modern libraries and tools for notifications, animations, validation, and responsive design. All passwords are securely stored in the browser's local storage.
 
 ## Features
-- **Toast Notifications**: Display toast messages to users for various actions using the **Toastify** library.
-- **Animations**: Add engaging animations to the application using the **LordIcon** library.
-- **Real-Time Validation**: Validate user input in real-time using **Regex**.
-- **Password Management**: Save user passwords securely in the browser's local storage.
-- **Responsive Design**: Create a visually appealing and responsive UI using **Tailwind CSS**.
+- **Toast Notifications**: Real-time feedback for user actions using **Toastify**.
+- **Animations**: Engaging animations powered by **Lottie**.
+- **Real-Time Validation**: Input validation using **Regex** to ensure data integrity.
+- **Password Management**: Securely save and manage passwords in the browser's local storage.
+- **Responsive Design**: Built with **Tailwind CSS** for a modern and responsive UI.
 
 ## Libraries/Tools Used
-### 1. **Toastify**
-- Used for creating toast notifications and managing them with a Toastify container.
-- Provides feedback to users for their actions.
-
-### 2. **LordIcon**
-- Used for creating animations with the lottie component.
-- Enhances the user experience with visually appealing animations.
-
-### 3. **Regex**
-- Used for real-time validation of user input.
-- Ensures data integrity by validating input against predefined rules.
-
-### 4. **LocalStorage API**
-- Used to save all user passwords in the browser's local storage.
-- Provides a simple and secure way to manage user credentials.
-
-### 5. **Tailwind CSS**
-- Used for designing the application with a utility-first approach.
-- Enables rapid development of responsive and modern UI components.
+1. **Toastify**: For creating toast notifications.
+2. **Lottie**: For adding animations using JSON files.
+3. **Regex**: For validating user input in real-time.
+4. **LocalStorage API**: For securely storing user passwords in the browser.
+5. **Tailwind CSS**: For designing a responsive and visually appealing UI.
 
 ## Installation
 1. Clone the repository:
-   ```pwsh
+   ```bash
    git clone {repository_url}
+   ```
+2. Navigate to the project directory:
+   ```bash
+   cd passwordmanager
+   ```
+3. Install dependencies:
+   ```bash
+   npm install
+   ```
+4. Start the development server:
+   ```bash
+   npm run dev
+   ```
+
+## Usage
+1. Open the application in your browser at `http://localhost:5173`.
+2. Use the **Home** page to add new passwords.
+3. Navigate to the **Edit** page to update existing passwords.
+4. View saved passwords in the **About** section.
+
+## Folder Structure
+```
+passwordmanager/
+├── public/
+│   └── vite.svg
+├── src/
+│   ├── assets/
+│   │   ├── add-Animation.json
+│   │   ├── check-animation.json
+│   │   ├── contact-animation.json
+│   │   ├── copy-animation.json
+│   │   ├── react.svg
+│   │   └── shield-animation.json
+│   ├── components/
+│   │   ├── Contact.jsx
+│   │   ├── edit.jsx
+│   │   ├── Home.jsx
+│   │   ├── Lists.jsx
+│   │   ├── Manager.jsx
+│   │   └── Navbar.jsx
+│   ├── contextprovider/
+│   │   └── sessionprovider.jsx
+│   ├── App.jsx
+│   ├── index.css
+│   └── main.jsx
+├── .gitignore
+├── eslint.config.js
+├── index.html
+├── package.json
+├── README.md
+└── vite.config.js
+```
+
+## Contributing
+Contributions are welcome! Please follow these steps:
+1. Fork the repository.
+2. Create a new branch:
+   ```bash
+   git checkout -b feature-name
+   ```
+3. Commit your changes:
+   ```bash
+   git commit -m "Add feature description"
+   ```
+4. Push to the branch:
+   ```bash
+   git push origin feature-name
+   ```
+5. Open a pull request.
+
+## License
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
