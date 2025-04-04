@@ -1,17 +1,37 @@
-### What Libraries/Tools Used ? 
-    - **Toastify** -> for creating toast and using Toastify Container 
-        + This library is used to create toast notifications which are displayed to the user when they perform certain actions. 
-        + The toast notifications are displayed in a container which is created using the Toastify library.
-    - **LordIcon** -> for creating lottie component 
-        + This library is used to create animations in the application. 
-        + The animations are created using the lottie component which is provided by the LordIcon library.
-    - **Regex** -> for validation in real time 
-        + This library is used to validate user input in real time. 
-        + The regex library is used to validate the input data against a set of rules which are defined in the code.
-    - **Password All are Saving on LocalStoarage** -> all passwords are saved in local storage 
-        + This means that all the passwords which are entered by the user are saved in the local storage of the browser. 
-        + The passwords are saved using the localStorage API which is provided by the browser.
-    - **tailwind css** -> for design 
-        + This library is used to create the design of the application. 
-        + The design of the application is created using the utility-first approach which is provided by the tailwind css library.
+# Project Name
 
+## Description
+This project is a web application that provides users with a seamless experience by integrating various libraries and tools for notifications, animations, validation, and design. It also securely stores user passwords in the browser's local storage.
+
+## Features
+- **Toast Notifications**: Display toast messages to users for various actions using the **Toastify** library.
+- **Animations**: Add engaging animations to the application using the **LordIcon** library.
+- **Real-Time Validation**: Validate user input in real-time using **Regex**.
+- **Password Management**: Save user passwords securely in the browser's local storage.
+- **Responsive Design**: Create a visually appealing and responsive UI using **Tailwind CSS**.
+
+## Libraries/Tools Used
+### 1. **Toastify**
+- Used for creating toast notifications and managing them with a Toastify container.
+- Provides feedback to users for their actions.
+
+### 2. **LordIcon**
+- Used for creating animations with the lottie component.
+- Enhances the user experience with visually appealing animations.
+
+### 3. **Regex**
+- Used for real-time validation of user input.
+- Ensures data integrity by validating input against predefined rules.
+
+### 4. **LocalStorage API**
+- Used to save all user passwords in the browser's local storage.
+- Provides a simple and secure way to manage user credentials.
+
+### 5. **Tailwind CSS**
+- Used for designing the application with a utility-first approach.
+- Enables rapid development of responsive and modern UI components.
+
+## Installation
+1. Clone the repository:
+   ```pwsh
+   git clone {repository_url}
