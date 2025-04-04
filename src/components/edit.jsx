@@ -7,51 +7,68 @@ import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 const Edit = () => {
+  // Extract the 'id' parameter from the URL and 'navigate' function from react-router
   const { id } = useParams();
   const navigate = useNavigate();
+
+  // State to store form data for website, username, and password
   const [formData, setFormData] = useState({
     website: "",
     username: "",
     password: ""
   });
 
+  // Fetch and set form data from local storage when component mounts or 'id' changes
   useEffect(() => {
     const storedData = JSON.parse(localStorage.getItem("userLists")) || [];
     if (storedData[id]) {
-      setFormData(storedData[id]);
+      setFormData(storedData[id]); // Set form data if entry exists
     } else {
-      toast.error("Entry not found!", { autoClose: 1000 });
-      setTimeout(() => navigate("/about"), 1200);
+      toast.error("Entry not found!", { autoClose: 1000 }); // Show error if entry not found
+      setTimeout(() => navigate("/about"), 1200); // Redirect after showing error
     }
   }, [id, navigate]);
 
+  // Handle form submission
   const handleSubmit = (e) => {
-    e.preventDefault();
+    e.preventDefault(); // Prevent default form submission behavior
 
+    // Check if any form field is empty
     if (!formData.website || !formData.username || !formData.password) {
       toast.error("Please fill all fields!", {
         icon: <FaSave className="text-white" />
       });
-      return;
+      return; // Exit function if validation fails
     }
 
+    // Update local storage with new form data
     const updatedData = JSON.parse(localStorage.getItem("userLists"));
     updatedData[id] = formData;
     localStorage.setItem("userLists", JSON.stringify(updatedData));
 
+    // Show success toast notification
     toast.success("Changes saved successfully!", {
       icon: <Lottie animationData={editAnimation} loop={false} className="w-6 h-6" />
     });
 
+    // Redirect to '/about' after a delay
     setTimeout(() => navigate("/about"), 1500);
   };
 
+  // Handle input field changes and update form data state
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  // Render the edit form
   return (
     <div className="min-h-[calc(100vh-4rem)] bg-gradient-to-br from-purple-600 to-indigo-700 flex items-start justify-center pt-36 px-4">
+      {/* 
+        This is the container for the toast notifications that will appear at the top of the screen.
+        The position is set to top-center, and the newest toast will be displayed first.
+        The autoClose prop is set to 2000, which means that the toast will be automatically closed after 2 seconds.
+        The limit prop is set to 1, which means that only one toast will be displayed at a time.
+      */}
       <ToastContainer 
         position="top-center"
         autoClose={2000}
@@ -59,29 +76,64 @@ const Edit = () => {
         limit={1}
       />
       
+      {/* 
+        This is the main container for the edit form.
+        The width is set to 100% of the parent container, and the maximum width is set to md (medium).
+        The background color is set to a light gray color, and the backdrop blur is set to 1/4 of the screen.
+        The rounded corners are set to 1/2 of the screen, and the shadow is set to a medium-sized box shadow.
+        The padding is set to 6 pixels on all sides.
+      */}
       <div className="w-full max-w-md bg-white/10 backdrop-blur-sm rounded-xl shadow-xl p-6">
-        {/* Header Section */}
+        {/* 
+          This is the header section of the edit form.
+          It contains a back button and a title.
+        */}
         <div className="flex items-center justify-between mb-6">
+          {/* 
+            This is the back button.
+            When clicked, it will navigate back to the previous page.
+          */}
           <button
             onClick={() => navigate(-1)}
             className="text-white hover:text-indigo-200 flex items-center group transition-transform"
           >
+            {/* 
+              This is the icon for the back button.
+              When the button is hovered, it will move slightly to the left.
+            */}
             <FaArrowLeft className="mr-2 group-hover:-translate-x-1" />
+            {/* This is the text for the back button */}
             Back
           </button>
           
+          {/* 
+            This is the title of the edit form.
+            It contains a Lottie animation and a heading element.
+          */}
           <div className="flex items-center">
+            {/* 
+              This is the Lottie animation for the title.
+              The animation is set to loop infinitely, and the size is set to 10x10 pixels.
+            */}
             <Lottie
               animationData={editAnimation}
               loop={true}
               className="w-10 h-10"
             />
+            {/* This is the heading element for the title */}
             <h1 className="text-xl font-semibold text-white ml-2">Edit Credentials</h1>
           </div>
         </div>
 
-        {/* Edit Form */}
+        {/* 
+          This is the edit form with input fields and a save button.
+        */}
         <form onSubmit={handleSubmit} className="space-y-3">
+          {/* 
+            This is the first input field for the website URL.
+            The icon is set to a globe icon, and the placeholder text is set to "Website URL".
+            The autoFocus prop is set to true, which means that the input field will be focused when the page is loaded.
+          */}
           <InputField 
             icon={<FaGlobe />}
             name="website"
@@ -91,6 +143,10 @@ const Edit = () => {
             autoFocus
           />
           
+          {/* 
+            This is the second input field for the username.
+            The icon is set to a user icon, and the placeholder text is set to "Username".
+          */}
           <InputField
             icon={<FaUser />}
             name="username"
@@ -99,6 +155,11 @@ const Edit = () => {
             placeholder="Username"
           />
           
+          {/* 
+            This is the third input field for the password.
+            The icon is set to a lock icon, and the placeholder text is set to "Password".
+            The type prop is set to "password", which means that the input field will be a password field.
+          */}
           <InputField
             icon={<FaLock />}
             type="password"
@@ -108,11 +169,20 @@ const Edit = () => {
             placeholder="Password"
           />
 
+          {/* 
+            This is the save button.
+            When clicked, it will submit the form and save the changes to local storage.
+          */}
           <button
             type="submit"
             className="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-medium py-2.5 rounded-lg transition-colors flex items-center justify-center gap-2"
           >
+            {/* 
+              This is the icon for the save button.
+              It is a save icon.
+            */}
             <FaSave className="text-lg" />
+            {/* This is the text for the save button */}
             Save Changes
           </button>
         </form>
@@ -123,7 +193,15 @@ const Edit = () => {
 
 const InputField = ({ icon, ...props }) => (
   <div className="flex items-center bg-white/5 rounded-lg p-2 transition-colors hover:bg-white/10">
+    {/* 
+      This is the icon that will be displayed at the start of the input field.
+      It could be a FaGlobe for a website url, FaUser for a username, or FaLock for a password.
+    */}
     <span className="text-white/80 mx-2">{icon}</span>
+    {/* 
+      This is the actual input element. We're spreading all the props that were passed to us
+      onto this element, except for the icon, since we already handled that above.
+    */}
     <input
       {...props}
       className="w-full bg-transparent text-white placeholder-white/50 focus:outline-none text-sm py-1.5"

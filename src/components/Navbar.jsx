@@ -8,7 +8,13 @@ import lockAnimation from "../assets/shield-animation.json";
 export const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
 
+  /**
+   * A function that handles the click event on any Link component.
+   * This is used to close the navbar when a user clicks on a link.
+   * The function takes no arguments and simply sets the state of isOpen to false.
+   */
   const handleLinkClick = () => {
+    // Set the state of isOpen to false so that the navbar is hidden
     setIsOpen(false);
   };
 
@@ -73,16 +79,21 @@ export const Navbar = () => {
   );
 };
 
+// NavItem component is a functional component for rendering a navigation item
 const NavItem = ({ to, icon, text, onClick }) => (
+  // List item representing a single navigation link
   <li className="w-full md:w-auto">
+    {/* React Router Link component for client-side navigation */}
     <Link
-      to={to}
-      className="flex items-center space-x-3 px-6 py-3 md:py-2 text-white hover:bg-white/10 md:hover:bg-transparent md:hover:text-yellow-300 transition-all duration-300 group"
-      onClick={onClick}
+      to={to} // Destination path for the link
+      className="flex items-center space-x-3 px-6 py-3 md:py-2 text-white hover:bg-white/10 md:hover:bg-transparent md:hover:text-yellow-300 transition-all duration-300 group" // Styling for link
+      onClick={onClick} // Click event handler for the link
     >
+      {/* Icon for the navigation item */}
       <span className="text-xl opacity-80 group-hover:opacity-100 group-hover:scale-110 transition-transform">
-        {icon}
+        {icon} {/* Icon passed as a prop */}
       </span>
+      {/* Text label for the navigation item */}
       <span className="font-medium tracking-wide">{text}</span>
     </Link>
   </li>

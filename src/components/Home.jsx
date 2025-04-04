@@ -6,6 +6,14 @@ import Lottie from "lottie-react";
 import checkAnimation from '../assets/check-animation.json';
 import addAnimation from '../assets/add-animation.json';
 
+/**
+ * Home component manages the state for website, username, and password inputs.
+ * It performs live validation on these inputs and displays error messages if
+ * validation fails. It saves valid data to local storage and provides feedback
+ * via toast notifications on successful or unsuccessful form submission.
+ * The component also retrieves and displays stored data from local storage.
+ */
+
 const Home = () => {
   const [website, setWebsite] = useState("");
   const [username, setUsername] = useState("");
