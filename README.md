@@ -24,7 +24,7 @@ PassGuard is a web application designed to securely manage user passwords. It pr
 1. **Toastify**: For creating toast notifications.
 2. **Lottie**: For adding animations using JSON files.
 3. **Regex**: For validating user input in real-time.
-4. **LocalStorage API**: For securely storing user passwords in the browser.
+4. **MongoDB API**: For securely storing user passwords in the browser.
 5. **Tailwind CSS**: For designing a responsive and visually appealing UI.
 
 ## Installation
