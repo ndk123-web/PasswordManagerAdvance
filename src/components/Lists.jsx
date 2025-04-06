@@ -1,11 +1,5 @@
 import React, { useState, useEffect } from "react";
-import {
-  FaEye,
-  FaEyeSlash,
-  FaSearch,
-  FaEdit,
-  FaTrash,
-} from "react-icons/fa";
+import { FaEye, FaEyeSlash, FaSearch, FaEdit, FaTrash } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import { useContext } from "react";
 import { myContext } from "../contextprovider/sessionprovider.jsx"; // Import SessionContext
@@ -49,7 +43,7 @@ const About = () => {
     }
   };
 
-  // only run when component first mounts 
+  // only run when component first mounts
   useEffect(() => {
     // When component mounts, get data from local storage
     getUserData();
@@ -128,16 +122,19 @@ const About = () => {
           </thead>
           {/* Table body */}
           <tbody>
+
+            {/* loader indicator */}
             {loader && (
               <tr>
-                <td colSpan="4">
-                  <div className="flex justify-center items-center h-32">
+                <td colSpan="4" className="py-6 text-center">
+                  <div className="flex justify-center items-center">
                     <span className="loader"></span>
                   </div>
                 </td>
               </tr>
             )}
 
+            {/* if no loader then show data */}
             {!loader &&
               filteredLists.map((user, index) => (
                 <tr
@@ -194,4 +191,3 @@ const About = () => {
 };
 
 export default About;
-
