@@ -49,6 +49,7 @@ const About = () => {
     getUserData();
   }, []);
 
+
   // This function toggles the visibility of a password based on the index.
   // It updates the visiblePasswords state object to keep track of which passwords are visible.
   const togglePasswordVisibility = (index) => {
@@ -70,6 +71,7 @@ const About = () => {
       },
       body: JSON.stringify({ index }),
     });
+    getUserData();
   };
 
   // This function navigates to the edit route when the user clicks the edit icon.
