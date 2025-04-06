@@ -9,11 +9,16 @@ const About = () => {
   const [visiblePasswords, setVisiblePasswords] = useState({}); // Object to keep track of which passwords are visible
   const navigate = useNavigate(); // To navigate to edit route
 
+  const getUserData = async () => {
+    const response = await fetch("http://localhost:3000/userLists");
+    const data = await response.json();
+    setUserLists(data);
+  };
+
   useEffect(() => {
     // When component mounts, get data from local storage
-    const storedData = JSON.parse(localStorage.getItem("userLists")) || [];
-    setUserLists(storedData);
-  }, []);
+    getUserData();
+  }, [userLists]);
 
   const togglePasswordVisibility = (index) => {
     // When user clicks the eye icon, toggle the password visibility
@@ -23,11 +28,15 @@ const About = () => {
     }));
   };
 
-  const handleDelete = (index) => {
+  const handleDelete = async (index) => {
     // When user clicks the trash icon, filter out the item at the given index
-    const updatedUserLists = userLists.filter((_, i) => i !== index);
-    setUserLists(updatedUserLists);
-    localStorage.setItem("userLists", JSON.stringify(updatedUserLists));
+    const deleteUser = await fetch("http://localhost:3000/delete", {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ index }),
+    });
   };
 
   const handleEdit = (index) => {
@@ -77,8 +86,8 @@ const About = () => {
           {/* Table body */}
           <tbody>
             {filteredLists.map((user, index) => (
-              <tr 
-                key={index} 
+              <tr
+                key={user._id}
                 className="border-b border-gray-200 hover:bg-indigo-50 transition-colors"
               >
                 {/* Website */}
@@ -106,15 +115,15 @@ const About = () => {
                   <div className="flex justify-center items-center gap-4">
                     {/* Edit button */}
                     <button
-                      onClick={() => handleEdit(index)}
+                      onClick={() => handleEdit(user._id)}
                       className="p-2 text-blue-600 hover:text-blue-800 rounded-full hover:bg-blue-100 transition-all duration-300 transform hover:scale-110"
                     >
                       <FaEdit className="text-xl" />
                     </button>
-                    
+
                     {/* Delete button */}
                     <button
-                      onClick={() => handleDelete(index)}
+                      onClick={() => handleDelete(user._id)}
                       className="p-2 text-red-600 hover:text-red-800 rounded-full hover:bg-red-100 transition-all duration-300 transform hover:scale-110"
                     >
                       <FaTrash className="text-xl" />

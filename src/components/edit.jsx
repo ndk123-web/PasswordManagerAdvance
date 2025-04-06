@@ -15,40 +15,73 @@ const Edit = () => {
   const [formData, setFormData] = useState({
     website: "",
     username: "",
-    password: ""
+    password: "",
   });
 
-  // Fetch and set form data from local storage when component mounts or 'id' changes
-  useEffect(() => {
-    const storedData = JSON.parse(localStorage.getItem("userLists")) || [];
-    if (storedData[id]) {
-      setFormData(storedData[id]); // Set form data if entry exists
-    } else {
-      toast.error("Entry not found!", { autoClose: 1000 }); // Show error if entry not found
-      setTimeout(() => navigate("/about"), 1200); // Redirect after showing error
+  const editUserData = async (id) => {
+    try {
+      const response = await fetch(`http://localhost:3000/user/${id}`);
+      const data = await response.json();
+      setFormData(data);
+    } catch (err) {
+      console.error(err);
     }
-  }, [id, navigate]);
+  };
+
+  // when id changes then re renders the page
+  useEffect(() => {
+    if (id) {
+      editUserData(id);
+    }
+  }, [id]);
+
+  // // Fetch and set form data from local storage when component mounts or 'id' changes
+  // useEffect(() => {
+  //   const storedData = JSON.parse(localStorage.getItem("userLists")) || [];
+  //   if (storedData[id]) {
+  //     setFormData(storedData[id]); // Set form data if entry exists
+  //   } else {
+  //     toast.error("Entry not found!", { autoClose: 1000 }); // Show error if entry not found
+  //     setTimeout(() => navigate("/about"), 1200); // Redirect after showing error
+  //   }
+  // }, [id, navigate]);
 
   // Handle form submission
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault(); // Prevent default form submission behavior
 
     // Check if any form field is empty
     if (!formData.website || !formData.username || !formData.password) {
       toast.error("Please fill all fields!", {
-        icon: <FaSave className="text-white" />
+        icon: <FaSave className="text-white" />,
       });
       return; // Exit function if validation fails
     }
 
-    // Update local storage with new form data
-    const updatedData = JSON.parse(localStorage.getItem("userLists"));
-    updatedData[id] = formData;
-    localStorage.setItem("userLists", JSON.stringify(updatedData));
+    const response = await fetch(`http://localhost:3000/updateUser/${id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(formData),
+    });
+    
+    const data = await response.json();
 
     // Show success toast notification
+    if (data.message != "success") {
+      toast.error("Please fill all fields!", {
+        icon: <FaSave className="text-white" />,
+      });
+      return;
+    }
+
     toast.success("Changes saved successfully!", {
-      icon: <Lottie animationData={editAnimation} loop={false} className="w-6 h-6" />
+      icon: (
+        <Lottie
+          animationData={editAnimation}
+          loop={false}
+          className="w-6 h-6"
+        />
+      ),
     });
 
     // Redirect to '/about' after a delay
@@ -69,13 +102,13 @@ const Edit = () => {
         The autoClose prop is set to 2000, which means that the toast will be automatically closed after 2 seconds.
         The limit prop is set to 1, which means that only one toast will be displayed at a time.
       */}
-      <ToastContainer 
+      <ToastContainer
         position="top-center"
-        autoClose={2000}
+        autoClose={1000}
         newestOnTop
         limit={1}
       />
-      
+
       {/* 
         This is the main container for the edit form.
         The width is set to 100% of the parent container, and the maximum width is set to md (medium).
@@ -105,7 +138,7 @@ const Edit = () => {
             {/* This is the text for the back button */}
             Back
           </button>
-          
+
           {/* 
             This is the title of the edit form.
             It contains a Lottie animation and a heading element.
@@ -121,7 +154,9 @@ const Edit = () => {
               className="w-10 h-10"
             />
             {/* This is the heading element for the title */}
-            <h1 className="text-xl font-semibold text-white ml-2">Edit Credentials</h1>
+            <h1 className="text-xl font-semibold text-white ml-2">
+              Edit Credentials
+            </h1>
           </div>
         </div>
 
@@ -134,7 +169,7 @@ const Edit = () => {
             The icon is set to a globe icon, and the placeholder text is set to "Website URL".
             The autoFocus prop is set to true, which means that the input field will be focused when the page is loaded.
           */}
-          <InputField 
+          <InputField
             icon={<FaGlobe />}
             name="website"
             value={formData.website}
@@ -142,7 +177,7 @@ const Edit = () => {
             placeholder="Website URL"
             autoFocus
           />
-          
+
           {/* 
             This is the second input field for the username.
             The icon is set to a user icon, and the placeholder text is set to "Username".
@@ -154,7 +189,7 @@ const Edit = () => {
             onChange={handleChange}
             placeholder="Username"
           />
-          
+
           {/* 
             This is the third input field for the password.
             The icon is set to a lock icon, and the placeholder text is set to "Password".
