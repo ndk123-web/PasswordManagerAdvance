@@ -42,9 +42,11 @@ const Edit = () => {
     // Check if any form field is empty
     if (!formData.website || !formData.username || !formData.password) {
       // Show error toast notification if any field is empty
-      toast.error("Please fill all fields!", {
-        // Add a save icon to the toast notification
-        icon: <FaSave className="text-white" />,
+      toast.error("Please correct all fields!", {
+        position: "top-center",
+        autoClose: 2000,
+        hideProgressBar: true,
+        theme: "colored",
       });
       return; // Exit function if validation fails
     }
@@ -62,9 +64,11 @@ const Edit = () => {
     // Show success toast notification if the backend returned a 'success' message
     if (data.message !== "success") {
       // Show error toast notification if the backend returned an error
-      toast.error("Please fill all fields!", {
-        // Add a save icon to the toast notification
-        icon: <FaSave className="text-white" />,
+      toast.error("Please correct all fields!", {
+        position: "top-center",
+        autoClose: 2000,
+        hideProgressBar: true,
+        theme: "colored",
       });
       return;
     }
@@ -72,13 +76,9 @@ const Edit = () => {
     // Show success toast notification
     toast.success("Changes saved successfully!", {
       // Add a lottie animation to the toast notification
-      icon: (
-        <Lottie
-          animationData={editAnimation}
-          loop={false}
-          className="w-6 h-6"
-        />
-      ),
+      position: "top-center",
+      hideProgressBar: true,
+      theme: "colored",
     });
 
     // Redirect to '/about' after a delay

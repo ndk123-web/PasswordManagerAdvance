@@ -1,10 +1,19 @@
 import React, { useState, useEffect } from "react";
-import { FaEye, FaEyeSlash, FaSearch, FaEdit, FaTrash } from "react-icons/fa";
+import {
+  FaEye,
+  FaEyeSlash,
+  FaSearch,
+  FaEdit,
+  FaTrash,
+} from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import { useContext } from "react";
 import { myContext } from "../contextprovider/sessionprovider.jsx"; // Import SessionContext
 import "../loader.css"; // Import loader CSS
 
+// This component renders a list of all the user's saved login credentials.
+// It also allows the user to search for a specific login credential,
+// edit an existing credential, or delete a credential.
 const About = () => {
   // State variables
   const [userLists, setUserLists] = useState([]); // Local storage data
@@ -13,16 +22,30 @@ const About = () => {
   const navigate = useNavigate(); // To navigate to edit route
   const { loader, setLoader } = useContext(myContext);
 
+  // This function retrieves the user data from the backend
+  // and updates the component's state with the retrieved data.
+  // It also sets the loader state to true while the data is being fetched,
+  // and sets it back to false when the data has been fetched.
   const getUserData = async () => {
     try {
-      setLoader(true); // Set loader to true 
+      // Set the loader state to true to indicate that the data is being fetched.
+      setLoader(true);
+
+      // Send a GET request to the backend to retrieve the user data.
       const response = await fetch("http://localhost:3000/userLists");
+
+      // Parse the response as JSON.
       const data = await response.json();
+
+      // Update the component's state with the retrieved data.
       setUserLists(data);
     } catch (err) {
+      // If there is an error, log it to the console.
       console.log(err);
     } finally {
-      setLoader(false); // Set loader to false  
+      // Set the loader state back to false when the data has been fetched,
+      // regardless of whether there was an error or not.
+      setLoader(false);
     }
   };
 
@@ -32,6 +55,8 @@ const About = () => {
     getUserData();
   }, []);
 
+  // This function toggles the visibility of a password based on the index.
+  // It updates the visiblePasswords state object to keep track of which passwords are visible.
   const togglePasswordVisibility = (index) => {
     // When user clicks the eye icon, toggle the password visibility
     setVisiblePasswords((prev) => ({
@@ -40,6 +65,8 @@ const About = () => {
     }));
   };
 
+  // This function deletes a user's login credential based on the index.
+  // It sends a DELETE request to the backend to delete the user's credential.
   const handleDelete = async (index) => {
     // When user clicks the trash icon, filter out the item at the given index
     const deleteUser = await fetch("http://localhost:3000/delete", {
@@ -51,11 +78,14 @@ const About = () => {
     });
   };
 
+  // This function navigates to the edit route when the user clicks the edit icon.
   const handleEdit = (index) => {
     // When user clicks the edit icon, navigate to the edit route
     navigate(`/edit/${index}`);
   };
 
+  // This function filters the userLists state array based on the searchTerm.
+  // It returns a new array with only the items that match the searchTerm.
   const filteredLists = userLists.filter(
     (user) =>
       user.website.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -164,3 +194,4 @@ const About = () => {
 };
 
 export default About;
+
