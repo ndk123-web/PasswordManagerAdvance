@@ -35,46 +35,43 @@ const Edit = () => {
     }
   }, [id]);
 
-  // // Fetch and set form data from local storage when component mounts or 'id' changes
-  // useEffect(() => {
-  //   const storedData = JSON.parse(localStorage.getItem("userLists")) || [];
-  //   if (storedData[id]) {
-  //     setFormData(storedData[id]); // Set form data if entry exists
-  //   } else {
-  //     toast.error("Entry not found!", { autoClose: 1000 }); // Show error if entry not found
-  //     setTimeout(() => navigate("/about"), 1200); // Redirect after showing error
-  //   }
-  // }, [id, navigate]);
-
   // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault(); // Prevent default form submission behavior
 
     // Check if any form field is empty
     if (!formData.website || !formData.username || !formData.password) {
+      // Show error toast notification if any field is empty
       toast.error("Please fill all fields!", {
+        // Add a save icon to the toast notification
         icon: <FaSave className="text-white" />,
       });
       return; // Exit function if validation fails
     }
 
+    // Send a PUT request to the backend to update the user data
     const response = await fetch(`http://localhost:3000/updateUser/${id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(formData),
     });
-    
+
+    // Get the response data from the backend
     const data = await response.json();
 
-    // Show success toast notification
-    if (data.message != "success") {
+    // Show success toast notification if the backend returned a 'success' message
+    if (data.message !== "success") {
+      // Show error toast notification if the backend returned an error
       toast.error("Please fill all fields!", {
+        // Add a save icon to the toast notification
         icon: <FaSave className="text-white" />,
       });
       return;
     }
 
+    // Show success toast notification
     toast.success("Changes saved successfully!", {
+      // Add a lottie animation to the toast notification
       icon: (
         <Lottie
           animationData={editAnimation}

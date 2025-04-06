@@ -1,0 +1,29 @@
+.loader {
+  position: relative;
+  width: 30px;  /* change according to need */
+  height: 30px;
+  display: inline-block; /* or flex depending on use case */
+}
+
+.loader::before,
+.loader::after {
+  content: '';
+  border-radius: 50%;
+  position: absolute;
+  inset: 0;
+  box-shadow: 0 0 10px 2px rgba(0, 0, 0, 0.3) inset;
+}
+
+.loader::after {
+  box-shadow: 0 2px 0 #8400ff inset;
+  animation: rotate 2s linear infinite;
+}
+
+@keyframes rotate {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
