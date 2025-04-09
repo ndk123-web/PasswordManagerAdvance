@@ -1,21 +1,98 @@
-import React from "react";
-import { Link } from "react-router-dom";
+import React, { useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { FaGithub, FaGoogle } from "react-icons/fa";
 import lockAnimation from "../assets/shield-animation.json";
 import Lottie from "lottie-react";
+import { myContext } from "../contextprovider/sessionprovider";
+import { useContext } from "react";
+import {
+  getAuth,
+  onAuthStateChanged,
+  signInWithPopup,
+  signInWithRedirect,
+  GoogleAuthProvider,
+  GithubAuthProvider,
+} from "firebase/auth";
+import { collection, getDocs, query, where } from "firebase/firestore";
+import { app, database } from "../firebaseConfig/config";
+import { set } from "mongoose";
 
 const Login = () => {
-  const handleGoogleLogin = () => {
-    console.log("Google Login Clicked");
+  const { emailPass, setEmailPass , isLoggedIn , setIsLoggedIn } = useContext(myContext);
+  const auth = getAuth(app);
+  const navigate = useNavigate();
+
+  const DBWork = async (response) => {
+    try {
+      const passwordDB = collection(database, "passwordDB");
+      const userExistQuery = query(
+        passwordDB,
+        where("username", "==", response.user.email)
+      );
+      const user = await getDocs(userExistQuery);
+      if (!user.empty) {
+        navigate("/");
+        setIsLoggedIn(true);
+      } else {
+        navigate("/signup");
+      }
+    } catch (err) {
+      alert(err.message);
+    }
   };
 
-  const handleGithubLogin = () => {
-    console.log("GitHub Login Clicked");
+  const handleGoogleLogin = async (e) => {
+    e.preventDefault();
+
+    try {
+      const googleProvider = new GoogleAuthProvider();
+      const response = await signInWithPopup(auth, googleProvider);
+      // console.log(response);
+      await DBWork(response);
+    } catch (err) {
+      alert(err.message);
+    }
+  };
+
+  const handleGithubLogin = async (e) => {
+    e.preventDefault();
+
+    try {
+      const githubProvider = new GithubAuthProvider();
+      const response = await signInWithPopup(auth, githubProvider);
+      await DBWork(response);
+    } catch (err) {
+      alert(err.message);
+    }
+  };
+
+  useEffect(() => {
+    try {
+      const unsubscribe = onAuthStateChanged(auth, (user) => {
+        if (user) {
+          navigate("/");
+        } else {
+          navigate("/login");
+        }
+        return () => unsubscribe();
+      });
+    } catch (err) {
+      alert(err.message);
+    }
+  });
+
+  const handleChange = (e) => {
+    e.preventDefault();
+    setEmailPass((prev) => {
+      return {
+        ...prev,
+        [e.target.name]: e.target.value,
+      };
+    });
   };
 
   const handleLoginSubmit = (e) => {
     e.preventDefault();
-    console.log("Login Form Submitted");
   };
 
   return (
@@ -23,7 +100,6 @@ const Login = () => {
       <div className="backdrop-blur-md bg-white/10 border border-white/30 rounded-2xl shadow-2xl p-8 w-full max-w-md text-white transform transition-all duration-300 hover:scale-[1.015]">
         <h2 className="text-3xl font-extrabold text-center mb-6 tracking-wide">
           Login to <span className="text-yellow-400">PassGuard</span>
-          
         </h2>
 
         {/* OAuth Buttons */}
@@ -58,12 +134,20 @@ const Login = () => {
           <input
             type="email"
             placeholder="Email"
+            name="username"
+            onChange={handleChange}
+            value={emailPass.username}
+            autoComplete="username"
             className="w-full px-4 py-2 rounded-lg bg-white/20 text-white placeholder-gray-300 caret-yellow-300 focus:outline-none focus:ring-2 focus:ring-yellow-400 transition-all duration-300"
             required
           />
           <input
             type="password"
             placeholder="Password"
+            name="password"
+            onChange={handleChange}
+            value={emailPass.password}
+            autoComplete="current-password"
             className="w-full px-4 py-2 rounded-lg bg-white/20 text-white placeholder-gray-300 caret-yellow-300 focus:outline-none focus:ring-2 focus:ring-yellow-400 transition-all duration-300"
             required
           />

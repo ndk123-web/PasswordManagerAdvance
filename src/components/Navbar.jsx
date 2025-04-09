@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import React, { useEffect, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import {
   FaHome,
   FaList,
@@ -13,18 +13,65 @@ import lockAnimation from "../assets/shield-animation.json";
 
 import { myContext } from "../contextprovider/sessionprovider";
 import { useContext } from "react";
+import { signOut, getAuth, onAuthStateChanged } from "firebase/auth";
+import { app , database} from "../firebaseConfig/config";
+import { query, where, collection, getDocs } from "firebase/firestore";
 
 export const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const { isLoggedIn, setIsLoggedIn } = useContext(myContext);
+  const navigate = useNavigate();
+  const auth = getAuth(app);
+  const [userData, setUserData] = useState({ uid: "", username: "", url: "" });
 
   const handleLinkClick = () => {
     setIsOpen(false);
   };
 
-  const handleAuthToggle = () => {
-    setIsLoggedIn(!isLoggedIn); // ✅ Toggle login/logout
-    setIsOpen(false); // Close navbar on click
+  // useEffect( () => {
+  //   if(isLoggedIn == true){
+  //     setIsLoggedIn(false);
+  //   }
+  // } , [isLoggedIn])
+
+  // fetching data from firebase firestore
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        try {
+          const passwordDB = collection(database, "passwordDB");
+          const userExistQuery = query(
+            passwordDB,
+            where("uid", "==", user.uid)
+          );
+          const querySnapShot = await getDocs(userExistQuery);
+
+          if (!querySnapShot.empty) {
+            const userDoc = querySnapShot.docs[0].data(); // Assume only one match
+            setUserData({
+              uid: user.uid,
+              username: userDoc.email || user.email,
+              url: user.photoURL || "", // fallback if no photoURL
+            });
+          } else {
+            alert("No user found in DB");
+          }
+        } catch (error) {
+          console.error("Error fetching user data:", error);
+        }
+      }
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  const handleLogOut = async () => {
+    onAuthStateChanged(auth, (user) => {
+      console.log(user);
+    });
+    await signOut(auth);
+    setIsLoggedIn(false);
+    navigate("/login");
   };
 
   return (
@@ -84,18 +131,44 @@ export const Navbar = () => {
         />
 
         {/* ✅ Login / Logout Button */}
-        <li className="w-full md:w-auto">
-          <button
-            onClick={handleAuthToggle}
-            className="flex items-center space-x-3 px-6 py-3 md:py-2 text-white hover:bg-white/10 md:hover:bg-transparent md:hover:text-yellow-300 transition-all duration-300 group"
-          >
-            <span className="text-xl opacity-80 group-hover:opacity-100 group-hover:scale-110 transition-transform">
-              <FaUser />
-            </span>
-            <Link to={'/login'} className="font-medium tracking-wide">
-              {isLoggedIn ? "Logout" : "Login"}
+        <li className="w-full md:w-auto flex items-center gap-3">
+          {isLoggedIn && (
+            <div className="flex items-center space-x-3 px-4 py-2 text-white bg-white/10 rounded-full backdrop-blur-md">
+              {/* Circular Icon or Logo */}
+              <div className="w-8 h-8 rounded-full bg-yellow-400 text-black font-bold flex items-center justify-center text-sm">
+                <img
+                  className="w-8 h-8 rounded-full bg-yellow-400 text-black font-bold flex items-center justify-center text-sm"
+                  src={userData.url || "https://cdn-icons-png.flaticon.com/512/149/149071.png"}
+                ></img>
+              </div>
+              {/* Username / Email */}
+              <span className="font-medium tracking-wide text-sm md:text-base">
+                {userData.username.slice(0, 8)}
+              </span>
+            </div>
+          )}
+
+          {isLoggedIn ? (
+            <button
+              onClick={handleLogOut}
+              className="flex items-center space-x-3 px-6 py-3 md:py-2 text-white hover:bg-white/10 md:hover:bg-transparent md:hover:text-yellow-300 transition-all duration-300 group"
+            >
+              <span className="text-xl opacity-80 group-hover:opacity-100 group-hover:scale-110 transition-transform">
+                <FaUser />
+              </span>
+              <span className="font-medium tracking-wide">Logout</span>
+            </button>
+          ) : (
+            <Link
+              to="/login"
+              className="flex items-center space-x-3 px-6 py-3 md:py-2 text-white hover:bg-white/10 md:hover:bg-transparent md:hover:text-yellow-300 transition-all duration-300 group"
+            >
+              <span className="text-xl opacity-80 group-hover:opacity-100 group-hover:scale-110 transition-transform">
+                <FaUser />
+              </span>
+              <span className="font-medium tracking-wide">Login</span>
             </Link>
-          </button>
+          )}
         </li>
       </ul>
     </nav>

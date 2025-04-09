@@ -18,7 +18,7 @@ import { collection, query, where, getDocs, addDoc } from "firebase/firestore";
 import { myContext } from "../contextprovider/sessionprovider";
 
 const Signup = () => {
-  const { emailPass, setEmailPass } = useContext(myContext);
+  const { emailPass, setEmailPass , isLoggedIn , setIsLoggedIn } = useContext(myContext);
   const auth = getAuth(app);
   const navigate = useNavigate();
 
@@ -57,7 +57,7 @@ const Signup = () => {
       });
 
       collection(database, "passwordDB", myListRef.id, "userLists");
-
+      setIsLoggedIn(true);
       alert("Success Sign Up");
       navigate("/");
       ResetEmailPass();
