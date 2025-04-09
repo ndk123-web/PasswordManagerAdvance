@@ -1,27 +1,35 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import { FaHome, FaList, FaEnvelope, FaBars, FaTimes } from "react-icons/fa";
+import {
+  FaHome,
+  FaList,
+  FaEnvelope,
+  FaBars,
+  FaTimes,
+  FaUser,
+} from "react-icons/fa";
 import Lottie from "lottie-react";
-// import checkAnimation from "../assets/check-animation.json";
 import lockAnimation from "../assets/shield-animation.json";
+
+import { myContext } from "../contextprovider/sessionprovider";
+import { useContext } from "react";
 
 export const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const { isLoggedIn, setIsLoggedIn } = useContext(myContext);
 
-  /**
-   * A function that handles the click event on any Link component.
-   * This is used to close the navbar when a user clicks on a link.
-   * The function takes no arguments and simply sets the state of isOpen to false.
-   */
   const handleLinkClick = () => {
-    // Set the state of isOpen to false so that the navbar is hidden
     setIsOpen(false);
   };
 
-  return (
-    <nav className="bg-gradient-to-r from-purple-500 to-indigo-600 p-3 flex justify-between items-center shadow-lg sticky top-0 z-50 backdrop-blur-lg bg-opacity-90 h-18"> {/* Height fix */}
-      {/* Logo with Animation */}
+  const handleAuthToggle = () => {
+    setIsLoggedIn(!isLoggedIn); // ✅ Toggle login/logout
+    setIsOpen(false); // Close navbar on click
+  };
 
+  return (
+    <nav className="bg-gradient-to-r from-purple-500 to-indigo-600 p-3 flex justify-between items-center shadow-lg sticky top-0 z-50 backdrop-blur-lg bg-opacity-90 h-18">
+      {/* Logo with Animation */}
       <Link to={"/"}>
         <div className="flex items-center space-x-2">
           <Lottie
@@ -74,26 +82,36 @@ export const Navbar = () => {
           text="Contact"
           onClick={handleLinkClick}
         />
+
+        {/* ✅ Login / Logout Button */}
+        <li className="w-full md:w-auto">
+          <button
+            onClick={handleAuthToggle}
+            className="flex items-center space-x-3 px-6 py-3 md:py-2 text-white hover:bg-white/10 md:hover:bg-transparent md:hover:text-yellow-300 transition-all duration-300 group"
+          >
+            <span className="text-xl opacity-80 group-hover:opacity-100 group-hover:scale-110 transition-transform">
+              <FaUser />
+            </span>
+            <Link to={'/login'} className="font-medium tracking-wide">
+              {isLoggedIn ? "Logout" : "Login"}
+            </Link>
+          </button>
+        </li>
       </ul>
     </nav>
   );
 };
 
-// NavItem component is a functional component for rendering a navigation item
 const NavItem = ({ to, icon, text, onClick }) => (
-  // List item representing a single navigation link
   <li className="w-full md:w-auto">
-    {/* React Router Link component for client-side navigation */}
     <Link
-      to={to} // Destination path for the link
-      className="flex items-center space-x-3 px-6 py-3 md:py-2 text-white hover:bg-white/10 md:hover:bg-transparent md:hover:text-yellow-300 transition-all duration-300 group" // Styling for link
-      onClick={onClick} // Click event handler for the link
+      to={to}
+      className="flex items-center space-x-3 px-6 py-3 md:py-2 text-white hover:bg-white/10 md:hover:bg-transparent md:hover:text-yellow-300 transition-all duration-300 group"
+      onClick={onClick}
     >
-      {/* Icon for the navigation item */}
       <span className="text-xl opacity-80 group-hover:opacity-100 group-hover:scale-110 transition-transform">
-        {icon} {/* Icon passed as a prop */}
+        {icon}
       </span>
-      {/* Text label for the navigation item */}
       <span className="font-medium tracking-wide">{text}</span>
     </Link>
   </li>

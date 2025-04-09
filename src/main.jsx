@@ -10,6 +10,8 @@ import About from "./components/Lists.jsx";
 import Contact from "./components/Contact.jsx";
 import Navbar from "./components/Navbar.jsx";
 import Edit from "./components/edit.jsx";
+import Login from "./components/Login.jsx";
+import Signup from "./components/SignUp.jsx";
 
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 
@@ -42,19 +44,37 @@ const router = createBrowserRouter([
     ),
   },
   {
-    path : '/edit/:id',
-    element : (
+    path: "/edit/:id",
+    element: (
       <>
         <Navbar />
         <Edit />
       </>
-    )
+    ),
   },
+  {
+    path: "/login",
+    element: (
+      <>
+        <Login />
+      </>
+    ),
+  },
+  {
+    path: '/signup',
+    element : (
+      <>
+        <Signup />
+      </>
+    )
+  }
 ]);
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>
-    <SessionProvider> {/* Wrap everything inside this */}
+    <SessionProvider>
+      {" "}
+      {/* Wrap everything inside this */}
       <RouterProvider router={router} />
       <App />
     </SessionProvider>
