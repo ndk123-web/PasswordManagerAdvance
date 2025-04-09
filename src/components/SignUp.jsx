@@ -1,32 +1,27 @@
 // problem with google and signup duplicate user is accessing
 // solution -> need to add query and where and validate in DBWork Function
-
-import React, { useContext } from "react";
-import { useNavigate, Link } from "react-router-dom"; // Navigation and link components
-import { FaGoogle, FaGithub } from "react-icons/fa"; // Icons for buttons
-import { nanoid } from "nanoid"; // For generating random IDs
-
-import { myContext } from "../contextprovider/sessionprovider"; // Global context for form state
-import { app, database } from "../firebaseConfig/config"; // Firebase app and Firestore DB config
-
-// Firebase Auth imports
 import {
-  getAuth,
-  createUserWithEmailAndPassword,
   GoogleAuthProvider,
   GithubAuthProvider,
   signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult,
+  createUserWithEmailAndPassword,
+  getAuth,
 } from "firebase/auth";
-
-// Firestore functions
-import { collection, addDoc, query, where, getDocs } from "firebase/firestore";
+import { useEffect, useContext } from "react";
+import { useNavigate, Link } from "react-router-dom";
+import { FaGoogle, FaGithub } from "react-icons/fa";
+import { nanoid } from "nanoid";
+import { app, database } from "../firebaseConfig/config";
+import { collection, query, where, getDocs, addDoc } from "firebase/firestore";
+import { myContext } from "../contextprovider/sessionprovider";
 
 const Signup = () => {
-  const { emailPass, setEmailPass } = useContext(myContext); // Access global form state
+  const { emailPass, setEmailPass } = useContext(myContext);
   const auth = getAuth(app);
   const navigate = useNavigate();
 
-  // Handle input changes and update state
   const handleChange = (e) => {
     setEmailPass((prev) => ({
       ...prev,
@@ -34,17 +29,14 @@ const Signup = () => {
     }));
   };
 
-  // Reset input fields
   const ResetEmailPass = () => {
     setEmailPass({ username: "", password: "" });
   };
 
-  // Add user data to Firestore database
   const DbWork = async (username, password, imageURL, uid) => {
     try {
       const passwordDB = collection(database, "passwordDB");
 
-      // Step 1: Check if user already exists by username
       const userExistQuery = query(
         passwordDB,
         where("username", "==", emailPass.username || username)
@@ -53,12 +45,10 @@ const Signup = () => {
       const querySnapshot = await getDocs(userExistQuery);
 
       if (!querySnapshot.empty) {
-        // User with this username already exists
         alert("User already exists in database!");
-        return; // Don't proceed further
+        return;
       }
 
-      // Step 2: Add new user
       const myListRef = await addDoc(passwordDB, {
         username: emailPass.username || username,
         password: emailPass.password || password,
@@ -66,13 +56,7 @@ const Signup = () => {
         uid: uid || nanoid(16),
       });
 
-      // Step 3: (Optional) Create subcollection (if needed later)
-      const subCollection = collection(
-        database,
-        "passwordDB",
-        myListRef.id,
-        "userLists"
-      );
+      collection(database, "passwordDB", myListRef.id, "userLists");
 
       alert("Success Sign Up");
       navigate("/");
@@ -83,7 +67,6 @@ const Signup = () => {
     }
   };
 
-  // Handle Email/Password Signup
   const handleSignup = async (e) => {
     e.preventDefault();
 
@@ -110,44 +93,69 @@ const Signup = () => {
     }
   };
 
-  // const checkIsSignUp = (email){
+  // ✅ Detect mobile
+  const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+  console.log(navigator.userAgent)
 
-  // }
-
-  // Handle Google Signup
   const handleGoogleSignup = async () => {
+    const googleProvider = new GoogleAuthProvider();
     try {
-      const googleProvider = new GoogleAuthProvider();
-      const response = await signInWithPopup(auth, googleProvider);
-      await DbWork(
-        response.user.email,
-        nanoid(16),
-        response.user.photoURL,
-        response.user.uid
-      );
-      alert("Successfully Sign Up With Google");
-      navigate("/");
+      if (isMobile) {
+        await signInWithRedirect(auth, googleProvider);
+      } else {
+        const response = await signInWithPopup(auth, googleProvider);
+        await DbWork(
+          response.user.email,
+          nanoid(16),
+          response.user.photoURL,
+          response.user.uid
+        );
+        alert("Successfully Sign Up With Google");
+        navigate("/");
+      }
     } catch (err) {
       alert(err.message);
     }
   };
 
-  // Handle GitHub Signup
   const handleGithubSignup = async () => {
+    const githubProvider = new GithubAuthProvider();
     try {
-      const githubProvider = new GithubAuthProvider();
-      const response = await signInWithPopup(auth, githubProvider);
-      await DbWork(
-        response.user.email,
-        nanoid(16),
-        response.user.photoURL,
-        response.user.uid
-      );
-      alert("Success Github Sign Up");
+      if (isMobile) {
+        await signInWithRedirect(auth, githubProvider);
+      } else {
+        const response = await signInWithPopup(auth, githubProvider);
+        await DbWork(
+          response.user.email,
+          nanoid(16),
+          response.user.photoURL,
+          response.user.uid
+        );
+        alert("Success Github Sign Up");
+      }
     } catch (err) {
       alert(err.message);
     }
   };
+
+  // ✅ Handle redirect result (after Google/Github sign in from mobile)
+  useEffect(() => {
+    getRedirectResult(auth)
+      .then((result) => {
+        if (result && result.user) {
+          DbWork(
+            result.user.email,
+            nanoid(16),
+            result.user.photoURL,
+            result.user.uid
+          );
+          navigate("/");
+        }
+      })
+      .catch((err) => {
+        console.log("Redirect SignIn Error:", err.message);
+      });
+  }, []);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-600 via-indigo-700 to-indigo-900 px-4">
@@ -156,7 +164,6 @@ const Signup = () => {
           Create Account
         </h2>
 
-        {/* Social Buttons */}
         <div className="flex justify-center gap-6 mb-6">
           <button
             onClick={handleGoogleSignup}
@@ -178,7 +185,6 @@ const Signup = () => {
           <span className="text-sm">or sign up with email</span>
         </div>
 
-        {/* Email Signup Form */}
         <form onSubmit={handleSignup} className="space-y-4">
           <input
             type="email"
@@ -208,7 +214,6 @@ const Signup = () => {
           </button>
         </form>
 
-        {/* Already have an account? */}
         <p className="text-white text-sm mt-6 text-center">
           Already have an account?{" "}
           <Link to="/login" className="text-yellow-300 hover:underline">

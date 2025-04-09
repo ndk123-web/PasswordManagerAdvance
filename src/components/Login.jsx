@@ -47,7 +47,7 @@ const Login = () => {
         {/* Divider with subtle animation */}
         <div className="flex items-center justify-center mb-6">
           <span className="flex-1 border-b border-white/30"></span>
-          <span className="mx-3 text-sm text-gray-200 tracking-wide animate-pulse">
+          <span className="mx-3 text-sm text-gray-200 tracking-wide animate-bounce">
             or login with email
           </span>
           <span className="flex-1 border-b border-white/30"></span>
