@@ -105,12 +105,10 @@ export const Navbar = () => {
 
       {/* Navigation Links */}
       <ul
-        className={`md:flex md:space-x-6 absolute md:static top-full left-0 w-full md:w-auto bg-purple-600/95 md:bg-transparent flex-col md:flex-row items-center transition-all duration-300 ease-out overflow-hidden
-        ${
-          isOpen
-            ? "max-h-screen py-4 opacity-100"
-            : "max-h-0 md:max-h-full opacity-0 md:opacity-100"
-        }`}
+        className={`md:flex md:space-x-6 absolute md:static top-full left-0 w-full md:w-auto 
+  bg-purple-600/95 md:bg-transparent flex-col md:flex-row items-center transition-all duration-300 ease-in-out 
+  ${isOpen ? "max-h-[500px] py-4 opacity-100" : "max-h-0 opacity-0"} 
+  md:max-h-full md:opacity-100 overflow-hidden z-40`}
       >
         <NavItem
           to="/"
@@ -147,7 +145,7 @@ export const Navbar = () => {
               </div>
               {/* Username / Email */}
               <span className="font-medium tracking-wide text-sm md:text-base">
-                {userData.username.slice(0, 8) || "Guest"}
+                {auth.currentUser.displayName || "Guest"}
               </span>
             </div>
           )}

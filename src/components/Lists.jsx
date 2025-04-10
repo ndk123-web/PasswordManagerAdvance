@@ -6,9 +6,16 @@ import { myContext } from "../contextprovider/sessionprovider.jsx"; // Import Se
 import "../loader.css"; // Import loader CSS
 
 import { app, database } from "../firebaseConfig/config.js";
-import { query, where, getDocs, collection } from "firebase/firestore";
+import {
+  query,
+  where,
+  getDocs,
+  collection,
+  deleteDoc,
+  doc,
+  getDoc,
+} from "firebase/firestore";
 import { getAuth } from "firebase/auth";
-import { getVertexAI } from "firebase/vertexai";
 import { toast } from "react-toastify";
 
 // This component renders a list of all the user's saved login credentials.
@@ -116,16 +123,57 @@ const About = () => {
 
   // This function deletes a user's login credential based on the index.
   // It sends a DELETE request to the backend to delete the user's credential.
-  const handleDelete = async (index) => {
-    // When user clicks the trash icon, filter out the item at the given index
-    const deleteUser = await fetch("http://localhost:3000/delete", {
-      method: "DELETE",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ index }),
-    });
-    getUserData();
+  const handleDelete = async (uid) => {
+    try {
+      const passwordDB = collection(database, "passwordDB");
+      const userExistQuery = query(
+        passwordDB,
+        where("uid", "==", auth.currentUser.uid) // ✅ fix 1
+      );
+
+      const querySnapShot = await getDocs(userExistQuery);
+
+      if (querySnapShot.empty) {
+        toast.error("Problem is There", {
+          position: "top-center",
+          autoClose: 2000,
+          hideProgressBar: true,
+          theme: "colored",
+        });
+        return;
+      }
+
+      const userDoc = querySnapShot.docs[0];
+      const userDocId = userDoc.id;
+
+      // ✅ This is enough — no need to check subcollection snapshot
+      const targetRef = doc(
+        database,
+        "passwordDB",
+        userDocId,
+        "userLists",
+        uid // This should be the ID of the password entry to delete
+      );
+
+      await deleteDoc(targetRef);
+
+      toast.success("Deleted successfully", {
+        position: "top-center",
+        autoClose: 2000,
+        hideProgressBar: true,
+        theme: "colored",
+      });
+
+      getUserData();
+
+    } catch (err) {
+      toast.error(err.message, {
+        position: "top-center",
+        autoClose: 2000,
+        hideProgressBar: true,
+        theme: "colored",
+      });
+    }
   };
 
   // This function navigates to the edit route when the user clicks the edit icon.

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, use } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { FaGlobe, FaUser, FaLock, FaArrowLeft, FaSave } from "react-icons/fa";
 import Lottie from "lottie-react";
@@ -6,10 +6,25 @@ import editAnimation from "../assets/shield-animation.json";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
+import { database, app } from "../firebaseConfig/config";
+import { getAuth } from "firebase/auth";
+import {
+  query,
+  doc,
+  where,
+  getDocs,
+  getDoc,
+  collection,
+  updateDoc,
+} from "firebase/firestore";
+
 const Edit = () => {
   // Extract the 'id' parameter from the URL and 'navigate' function from react-router
   const { id } = useParams();
   const navigate = useNavigate();
+  const auth = getAuth(app);
+
+  // console.log("Id is: ",id)
 
   // State to store form data for website, username, and password
   const [formData, setFormData] = useState({
@@ -18,13 +33,60 @@ const Edit = () => {
     password: "",
   });
 
-  const editUserData = async (id) => {
+  useEffect(() => {}, [formData]);
+
+  const editUserData = async () => {
     try {
-      const response = await fetch(`http://localhost:3000/user/${id}`);
-      const data = await response.json();
-      setFormData(data);
+      // get current user using auth
+      const user = auth.currentUser;
+
+      if (!user) {
+        toast.error("User not authenticated");
+        return;
+      }
+
+      // Step 1: Get user doc ID using uid
+      const q = query(
+        collection(database, "passwordDB"),
+        where("uid", "==", user.uid)
+      );
+      const querySnapshot = await getDocs(q);
+
+      if (querySnapshot.empty) {
+        toast.error("User document not found!");
+        return;
+      }
+
+      // get first doc which is actually user doc and that doc id
+      const userDocId = querySnapshot.docs[0].id;
+
+      // Step 2: Access userLists subcollection and get the doc directly by id
+      // getting user userLists's using userDocId  which return ref to that doc
+      const targetDocRef = doc(
+        database,
+        "passwordDB",
+        userDocId,
+        "userLists",
+        id
+      );
+
+      // using getDoc will returns that ala data
+      const targetDocSnap = await getDoc(targetDocRef);
+
+      if (targetDocSnap.exists()) {
+        // first we need to call .data() to get the data
+        const data = targetDocSnap.data();
+        setFormData({
+          website: data.website || "",
+          username: data.username || "",
+          password: data.password || "",
+        });
+      } else {
+        toast.error("Data not found!");
+      }
     } catch (err) {
-      console.error(err);
+      console.error(err.message);
+      toast.error("Error fetching data");
     }
   };
 
@@ -37,33 +99,9 @@ const Edit = () => {
 
   // Handle form submission
   const handleSubmit = async (e) => {
-    e.preventDefault(); // Prevent default form submission behavior
+    e.preventDefault();
 
-    // Check if any form field is empty
     if (!formData.website || !formData.username || !formData.password) {
-      // Show error toast notification if any field is empty
-      toast.error("Please correct all fields!", {
-        position: "top-center",
-        autoClose: 2000,
-        hideProgressBar: true,
-        theme: "colored",
-      });
-      return; // Exit function if validation fails
-    }
-
-    // Send a PUT request to the backend to update the user data
-    const response = await fetch(`http://localhost:3000/updateUser/${id}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(formData),
-    });
-
-    // Get the response data from the backend
-    const data = await response.json();
-
-    // Show success toast notification if the backend returned a 'success' message
-    if (data.message !== "success") {
-      // Show error toast notification if the backend returned an error
       toast.error("Please correct all fields!", {
         position: "top-center",
         autoClose: 2000,
@@ -73,16 +111,71 @@ const Edit = () => {
       return;
     }
 
-    // Show success toast notification
+    // get the ref of passwordDB collection
+    const passwordDB = collection(database, "passwordDB");
+    
+    // make a query to check if the user exists
+    const userExistQuery = query(
+      passwordDB,
+      where("uid", "==", auth.currentUser.uid)
+    );
+
+    // get the query snapshot 
+    const querySnapShot = await getDocs(userExistQuery);
+
+    // check if the query snapshot is empty and return error
+    if (querySnapShot.empty) {
+      toast.error("No user data found!", {
+        position: "top-center",
+        autoClose: 2000,
+        hideProgressBar: true,
+        theme: "colored",
+      });
+      return;
+    }
+
+    // get the first doc from the query snapshot
+    const userDoc = querySnapShot.docs[0];
+    // get the doc id
+    const userDocId = userDoc.id;
+
+    // get the ref of userLists subcollection of current user 
+    const userListRef = collection(
+      database,
+      "passwordDB",
+      userDocId,
+      "userLists"
+    );
+    // get the userLists snapshot of current user 
+    const userListSnapShot = await getDocs(userListRef);
+
+    // check if the userLists snapshot is empty and return error
+    if (userListSnapShot.empty) {
+      toast.error("No user data found!", {
+        position: "top-center",
+        autoClose: 2000,
+        hideProgressBar: true,
+        theme: "colored",
+      });
+      return;
+    }
+
+    // get the first doc from the userLists snapshot whose id is equal to id and userDocID 
+    const targetRef = doc(database, "passwordDB", userDocId, "userLists", id);
+
+    // update the document 
+    await updateDoc(targetRef, {
+      website: formData.website,
+      username: formData.username,
+      password: formData.password,
+      updatedAt: new Date(), // optional, for tracking
+    });
+
     toast.success("Changes saved successfully!", {
-      // Add a lottie animation to the toast notification
       position: "top-center",
       hideProgressBar: true,
       theme: "colored",
     });
-
-    // Redirect to '/about' after a delay
-    setTimeout(() => navigate("/about"), 1500);
   };
 
   // Handle input field changes and update form data state

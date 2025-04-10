@@ -9,12 +9,19 @@ import {
   getAuth,
   onAuthStateChanged,
   signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult,
   signInWithEmailAndPassword,
   GoogleAuthProvider,
   GithubAuthProvider,
 } from "firebase/auth";
 import { collection, getDocs, query, where } from "firebase/firestore";
 import { app, database } from "../firebaseConfig/config";
+
+// Utility function to check mobile device
+const isMobile = () => {
+  return /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+};
 
 const Login = () => {
   const { emailPass, setEmailPass, isLoggedIn, setIsLoggedIn } =
@@ -39,6 +46,7 @@ const Login = () => {
       }
     } catch (err) {
       alert("Database Error: " + err.message);
+      setIsLoggedIn(false);
     }
   };
 
@@ -47,8 +55,12 @@ const Login = () => {
     e.preventDefault();
     try {
       const googleProvider = new GoogleAuthProvider();
-      const response = await signInWithPopup(auth, googleProvider);
-      await DBWork(response);
+      if (isMobile()) {
+        await signInWithRedirect(auth, googleProvider);
+      } else {
+        const response = await signInWithPopup(auth, googleProvider);
+        await DBWork(response);
+      }
     } catch (err) {
       alert("Google Login Error: " + err.message);
     }
@@ -59,8 +71,12 @@ const Login = () => {
     e.preventDefault();
     try {
       const githubProvider = new GithubAuthProvider();
-      const response = await signInWithPopup(auth, githubProvider);
-      await DBWork(response);
+      if (isMobile()) {
+        await signInWithRedirect(auth, githubProvider);
+      } else {
+        const response = await signInWithPopup(auth, githubProvider);
+        await DBWork(response);
+      }
     } catch (err) {
       alert("GitHub Login Error: " + err.message);
     }
@@ -90,14 +106,39 @@ const Login = () => {
     }
   };
 
-  // Automatically run when user state changes (for persistence login)
+  // Automatically run when user state changes + handle redirect result
   useEffect(() => {
+    console.log("Login component mounted");
+
+    // First check for redirect results
+    getRedirectResult(auth)
+      .then(async (result) => {
+        console.log("Redirect result received:", result);
+        if (result && result.user) {
+          console.log("Redirect success - user:", result.user.email);
+          await DBWork(result);
+        } else {
+          console.log("No redirect result or user is null");
+        }
+      })
+      .catch((err) => {
+        console.error("Redirect Auth Error:", err);
+        alert("Authentication failed after redirect: " + err.message);
+      });
+
+    // Then set up auth state change listener
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      console.log("Auth state changed:", user ? user.email : "No user");
       if (user) {
         const response = { user: { email: user.email } };
-        await DBWork(response);
+        try {
+          await DBWork(response);
+        } catch (error) {
+          console.error("Error in DBWork during auth state change:", error);
+        }
       }
     });
+
     return () => unsubscribe();
   }, []);
 

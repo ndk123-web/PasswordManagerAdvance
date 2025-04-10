@@ -109,7 +109,7 @@ const Signup = () => {
           response.user.email,
           nanoid(16),
           response.user.photoURL,
-          response.user.uid
+          response.user.uid,
         );
         alert("Successfully Sign Up With Google");
         navigate("/");
@@ -130,9 +130,10 @@ const Signup = () => {
           response.user.email,
           nanoid(16),
           response.user.photoURL,
-          response.user.uid
+          response.user.uid,
         );
         alert("Success Github Sign Up");
+        navigate("/");
       }
     } catch (err) {
       alert(err.message);
