@@ -5,6 +5,18 @@ import { FaGlobe, FaUser, FaLock } from "react-icons/fa";
 import Lottie from "lottie-react";
 import addAnimation from "../assets/add-animation.json";
 
+import { app, database } from "../firebaseConfig/config";
+import {
+  query,
+  where,
+  getDocs,
+  collection,
+  addDoc,
+  doc,
+} from "firebase/firestore";
+import { getAuth, onAuthStateChanged } from "firebase/auth";
+import { data, useNavigate } from "react-router";
+
 /**
  * Home component manages the state for website, username, and password inputs.
  * It performs live validation on these inputs and displays error messages if
@@ -22,6 +34,8 @@ const Home = () => {
   const [websiteError, setWebsiteError] = useState("");
   const [usernameError, setUsernameError] = useState("");
   const [passwordError, setPasswordError] = useState("");
+  const auth = getAuth(app);
+  const navigate = useNavigate();
 
   // Live validation
   useEffect(() => {
@@ -50,15 +64,70 @@ const Home = () => {
     }
   }, [website, username, password]);
 
-  const handleSubmit = async () => {
-    if (
-      !website ||
-      !username ||
-      !password ||
-      websiteError ||
-      usernameError ||
-      passwordError
-    ) {
+  const DBAddWork = async () => {
+    try {
+      const user = auth.currentUser;
+      if (!user) {
+        toast.error("User not logged in!", { position: "top-center" });
+        return;
+      }
+
+      // Step 1: Find the document where field "uid" === user.uid
+      const q = query(
+        collection(database, "passwordDB"),
+        where("uid", "==", user.uid)
+      );
+      const querySnapshot = await getDocs(q);
+
+      if (querySnapshot.empty) {
+        toast.error("No matching user document found in DB", {
+          position: "top-center",
+        });
+        return;
+      }
+
+      // Step 2: Get the document ID
+      const userDoc = querySnapshot.docs[0]; // Assuming only one match
+      const userDocId = userDoc.id;
+
+      // Step 3: Use that document ID to add to subcollection
+      const userList = collection(
+        database,
+        "passwordDB",
+        userDocId,
+        "userLists"
+      );
+
+      await addDoc(userList, {
+        website: website,
+        username: username,
+        password: password,
+        createdAt: new Date(),
+      });
+
+      toast.success("Password saved successfully!", {
+        position: "top-center",
+        autoClose: 2000,
+        theme: "colored",
+        hideProgressBar: true,
+      });
+
+      // Clear fields
+      setWebsite("");
+      setUsername("");
+      setPassword("");
+    } catch (err) {
+      toast.error(err.message || "Error saving password", {
+        position: "top-center",
+        theme: "colored",
+      });
+    }
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    if (websiteError || usernameError || passwordError) {
       toast.error("Please correct all fields!", {
         position: "top-center",
         autoClose: 2000,
@@ -68,49 +137,13 @@ const Home = () => {
       return;
     }
 
-    try {
-      const response = await fetch("http://localhost:3000/add", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ website, username, password }),
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to save password");
-      }
-
-      const newUser = await response.json();
-      // console.log(newUser);  // for debugging purposes
-
-      toast.success("Password saved successfully!", {
-        position: "top-center",
-        autoClose: 2000,
-        theme: "colored",
-        hideProgressBar: true,
-      });
-
-      setWebsite("");
-      setUsername("");
-      setPassword("");
-    } catch (err) {
-      toast.error(err.message || "Something went wrong", {
-        position: "top-center",
-        theme: "colored",
-      });
-    }
+    await DBAddWork();
   };
 
   return (
     <>
       <ToastContainer />
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          handleSubmit();
-        }}
-      >
+      <form onSubmit={handleSubmit}>
         <div className="flex flex-col items-center justify-center min-h-[calc(100vh-4rem)] bg-gradient-to-b from-indigo-600 to-purple-800 text-white p-6 pt-0">
           <h1 className="text-4xl font-extrabold mb-6 animate-bounce">
             PassGuard - Secure Your Passwords

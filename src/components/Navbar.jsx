@@ -42,7 +42,7 @@ export const Navbar = () => {
           const passwordDB = collection(database, "passwordDB");
           const userExistQuery = query(
             passwordDB,
-            where("uid", "==", user.uid)
+            where("username", "==", user.email)
           );
           const querySnapShot = await getDocs(userExistQuery);
 
@@ -53,6 +53,7 @@ export const Navbar = () => {
               username: userDoc.email || user.email,
               url: user.photoURL || "", // fallback if no photoURL
             });
+            setIsLoggedIn(true);
           } else {
             alert("No user found in DB");
           }
@@ -61,8 +62,7 @@ export const Navbar = () => {
         }
       }
     });
-    // it's Important whenever we reload the setILoggedIn must be True else in each reload we wont be able to get data about user 
-    setIsLoggedIn(true);
+    // it's Important whenever we reload the setILoggedIn must be True else in each reload we wont be able to get data about user
     return () => unsubscribe();
   }, []);
 
@@ -147,7 +147,7 @@ export const Navbar = () => {
               </div>
               {/* Username / Email */}
               <span className="font-medium tracking-wide text-sm md:text-base">
-                {userData.username.slice(0, 8)}
+                {userData.username.slice(0, 8) || "Guest"}
               </span>
             </div>
           )}

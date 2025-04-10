@@ -54,3 +54,10 @@ The system ensures **no duplicate user entries** in Firestore by:
 - Using a `query` and `where` clause:
   ```js
   query(passwordDB, where("username", "==", username));
+
+
+
+### Remaining
+  - AES CryptJS all fields should be saved inside firestore -> For security 
+  - Inside List Component Edit and Delete Buttons -> For Delete actually we need to write  
+  - Edit Component -> use AES for encrpyt the uid for security

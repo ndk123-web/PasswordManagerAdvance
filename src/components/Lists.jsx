@@ -1,9 +1,15 @@
 import React, { useState, useEffect } from "react";
 import { FaEye, FaEyeSlash, FaSearch, FaEdit, FaTrash } from "react-icons/fa";
-import { useNavigate } from "react-router-dom";
+import { data, useNavigate } from "react-router-dom";
 import { useContext } from "react";
 import { myContext } from "../contextprovider/sessionprovider.jsx"; // Import SessionContext
 import "../loader.css"; // Import loader CSS
+
+import { app, database } from "../firebaseConfig/config.js";
+import { query, where, getDocs, collection } from "firebase/firestore";
+import { getAuth } from "firebase/auth";
+import { getVertexAI } from "firebase/vertexai";
+import { toast } from "react-toastify";
 
 // This component renders a list of all the user's saved login credentials.
 // It also allows the user to search for a specific login credential,
@@ -15,40 +21,88 @@ const About = () => {
   const [visiblePasswords, setVisiblePasswords] = useState({}); // Object to keep track of which passwords are visible
   const navigate = useNavigate(); // To navigate to edit route
   const { loader, setLoader } = useContext(myContext);
+  const auth = getAuth(app);
+  const [myLists, setMyLists] = useState({
+    website: "",
+    username: "",
+    password: "",
+  });
+
+  // before we need to complete insert data inside home component
+  // const DBwork = async (response) => {
+  //   const passwordDB = collection(database, "passwordDB");
+  //   // console.log(response.email);
+  //   const userQuery = query(
+  //     passwordDB,
+  //     where("username", "==", response.email)
+  //   );
+  //   const user = await getDocs(userQuery);
+  //   if (!user.empty) {
+  //   }
+  // };
+
+  const getUserData = async () => {
+    try {
+      const user = auth.currentUser;
+      if (!user) {
+        navigate("/login");
+        return;
+      }
+
+      // 1. Find the document in "passwordDB" with current user's UID
+      const passwordDBRef = collection(database, "passwordDB");
+      const q = query(passwordDBRef, where("uid", "==", user.uid));
+      const querySnapshot = await getDocs(q);
+
+      if (querySnapshot.empty) {
+        toast.error("No user data found.");
+        return;
+      }
+
+      // 2. Get the doc ID
+      const userDoc = querySnapshot.docs[0]; // assuming only one doc per uid
+      const docId = userDoc.id;
+
+      // 3. Now get the user's stored credentials inside userLists subcollection
+      const userListsRef = collection(
+        database,
+        "passwordDB",
+        docId,
+        "userLists"
+      );
+      const userListsSnap = await getDocs(userListsRef);
+
+      const data = userListsSnap.docs.map((doc) => ({
+        _id: doc.id, // for delete/edit
+        ...doc.data(),
+      }));
+
+      setUserLists(data);
+      setLoader(false);
+    } catch (err) {
+      console.error("Error fetching user data:", err);
+      toast.error(err.message, {
+        position: "top-center",
+        autoClose: 2000,
+        hideProgressBar: true,
+        theme: "colored",
+      });
+      setLoader(false);
+    }
+  };
 
   // This function retrieves the user data from the backend
   // and updates the component's state with the retrieved data.
   // It also sets the loader state to true while the data is being fetched,
   // and sets it back to false when the data has been fetched.
-  const getUserData = async () => {
-    try {
-      // Set the loader state to true to indicate that the data is being fetched.
-      setLoader(true);
-
-      // Send a GET request to the backend to retrieve the user data.
-      const response = await fetch("http://localhost:3000/userLists");
-
-      // Parse the response as JSON.
-      const data = await response.json();
-
-      // Update the component's state with the retrieved data.
-      setUserLists(data);
-    } catch (err) {
-      // If there is an error, log it to the console.
-      console.log(err);
-    } finally {
-      // Set the loader state back to false when the data has been fetched,
-      // regardless of whether there was an error or not.
-      setLoader(false);
-    }
-  };
 
   // only run when component first mounts
   useEffect(() => {
+    setLoader(true);
     // When component mounts, get data from local storage
     getUserData();
+    // setLoader(false);
   }, []);
-
 
   // This function toggles the visibility of a password based on the index.
   // It updates the visiblePasswords state object to keep track of which passwords are visible.
@@ -124,7 +178,6 @@ const About = () => {
           </thead>
           {/* Table body */}
           <tbody>
-
             {/* loader indicator */}
             {loader && (
               <tr>

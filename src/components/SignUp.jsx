@@ -18,7 +18,8 @@ import { collection, query, where, getDocs, addDoc } from "firebase/firestore";
 import { myContext } from "../contextprovider/sessionprovider";
 
 const Signup = () => {
-  const { emailPass, setEmailPass , isLoggedIn , setIsLoggedIn } = useContext(myContext);
+  const { emailPass, setEmailPass, isLoggedIn, setIsLoggedIn } =
+    useContext(myContext);
   const auth = getAuth(app);
   const navigate = useNavigate();
 
@@ -49,6 +50,7 @@ const Signup = () => {
         return;
       }
 
+      // Create main user document
       const myListRef = await addDoc(passwordDB, {
         username: emailPass.username || username,
         password: emailPass.password || password,
@@ -56,7 +58,6 @@ const Signup = () => {
         uid: uid || nanoid(16),
       });
 
-      collection(database, "passwordDB", myListRef.id, "userLists");
       setIsLoggedIn(true);
       alert("Success Sign Up");
       navigate("/");
@@ -95,7 +96,7 @@ const Signup = () => {
 
   // ✅ Detect mobile
   const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-  console.log(navigator.userAgent)
+  console.log(navigator.userAgent);
 
   const handleGoogleSignup = async () => {
     const googleProvider = new GoogleAuthProvider();
