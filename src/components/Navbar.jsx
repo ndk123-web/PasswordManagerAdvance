@@ -14,7 +14,7 @@ import lockAnimation from "../assets/shield-animation.json";
 import { myContext } from "../contextprovider/sessionprovider";
 import { useContext } from "react";
 import { signOut, getAuth, onAuthStateChanged } from "firebase/auth";
-import { app , database} from "../firebaseConfig/config";
+import { app, database } from "../firebaseConfig/config";
 import { query, where, collection, getDocs } from "firebase/firestore";
 
 export const Navbar = () => {
@@ -61,12 +61,13 @@ export const Navbar = () => {
         }
       }
     });
-
+    // it's Important whenever we reload the setILoggedIn must be True else in each reload we wont be able to get data about user 
+    setIsLoggedIn(true);
     return () => unsubscribe();
   }, []);
 
   const handleLogOut = async () => {
-    onAuthStateChanged(auth, (user) => {
+    onAuthStateChanged(auth, async (user) => {
       console.log(user);
     });
     await signOut(auth);
@@ -138,7 +139,10 @@ export const Navbar = () => {
               <div className="w-8 h-8 rounded-full bg-yellow-400 text-black font-bold flex items-center justify-center text-sm">
                 <img
                   className="w-8 h-8 rounded-full bg-yellow-400 text-black font-bold flex items-center justify-center text-sm"
-                  src={userData.url || "https://cdn-icons-png.flaticon.com/512/149/149071.png"}
+                  src={
+                    userData.url ||
+                    "https://cdn-icons-png.flaticon.com/512/149/149071.png"
+                  }
                 ></img>
               </div>
               {/* Username / Email */}

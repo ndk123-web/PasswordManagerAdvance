@@ -18,7 +18,8 @@ import { app, database } from "../firebaseConfig/config";
 import { set } from "mongoose";
 
 const Login = () => {
-  const { emailPass, setEmailPass , isLoggedIn , setIsLoggedIn } = useContext(myContext);
+  const { emailPass, setEmailPass, isLoggedIn, setIsLoggedIn } =
+    useContext(myContext);
   const auth = getAuth(app);
   const navigate = useNavigate();
 
@@ -67,19 +68,17 @@ const Login = () => {
   };
 
   useEffect(() => {
-    try {
-      const unsubscribe = onAuthStateChanged(auth, (user) => {
-        if (user) {
-          navigate("/");
-        } else {
-          navigate("/login");
-        }
-        return () => unsubscribe();
-      });
-    } catch (err) {
-      alert(err.message);
-    }
-  });
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (!user.empty) {
+        await DBWork(user);
+        navigate("/");
+      } else {
+        alert("Please Login");
+        navigate("/login");
+      }
+      return () => unsubscribe();
+    });
+  }, []);
 
   const handleChange = (e) => {
     e.preventDefault();
