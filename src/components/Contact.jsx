@@ -10,28 +10,24 @@ import contactAnimation from "../assets/contact-animation.json";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
+// Contact.jsx
+// This component renders a contact form and displays contact information.
+// It includes a success notification on form submission.
+
+// handleSubmit function to display a success notification and reset the form.
+const handleSubmit = (e) => {
+  e.preventDefault();
+
+  toast.success("Message sent successfully!", {
+    position: "top-center",
+    autoClose: 2000,
+    theme: "colored",
+  });
+
+  e.target.reset();
+};
+
 const Contact = () => {
-  // This function is called when the form is submitted
-  // It will display a success toast notification
-  // and reset the form
-  const handleSubmit = (e) => {
-    e.preventDefault();
-
-    // Display a success toast notification
-    // with the message "Message sent successfully!"
-    // The notification will be displayed at the top center
-    // and will automatically close after 2000ms
-    // The theme of the notification will be set to "colored"
-    toast.success("Message sent successfully!", {
-      position: "top-center",
-      autoClose: 2000,
-      theme: "colored",
-    });
-
-    // Reset the form
-    e.target.reset();
-  };
-
   // Return the JSX for the Contact page
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-600 to-indigo-700 flex items-center justify-center p-4">

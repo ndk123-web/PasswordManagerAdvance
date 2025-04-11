@@ -1,3 +1,7 @@
+// Edit.jsx
+// This component allows users to edit existing login credentials.
+// It fetches data from Firestore and updates the database on form submission.
+
 import React, { useState, useEffect, use } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { FaGlobe, FaUser, FaLock, FaArrowLeft, FaSave } from "react-icons/fa";
@@ -23,8 +27,6 @@ const Edit = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const auth = getAuth(app);
-
-  // console.log("Id is: ",id)
 
   // State to store form data for website, username, and password
   const [formData, setFormData] = useState({
@@ -90,7 +92,7 @@ const Edit = () => {
     }
   };
 
-  // when id changes then re renders the page
+  // useEffect to fetch data for the credential being edited when the component mounts.
   useEffect(() => {
     if (id) {
       editUserData(id);
@@ -98,6 +100,7 @@ const Edit = () => {
   }, [id]);
 
   // Handle form submission
+  // handleSubmit function to update the credential in Firestore.
   const handleSubmit = async (e) => {
     e.preventDefault();
 

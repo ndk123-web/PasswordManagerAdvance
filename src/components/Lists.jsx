@@ -35,19 +35,6 @@ const About = () => {
     password: "",
   });
 
-  // before we need to complete insert data inside home component
-  // const DBwork = async (response) => {
-  //   const passwordDB = collection(database, "passwordDB");
-  //   // console.log(response.email);
-  //   const userQuery = query(
-  //     passwordDB,
-  //     where("username", "==", response.email)
-  //   );
-  //   const user = await getDocs(userQuery);
-  //   if (!user.empty) {
-  //   }
-  // };
-
   const getUserData = async () => {
     try {
       const user = auth.currentUser;
@@ -98,23 +85,15 @@ const About = () => {
     }
   };
 
-  // This function retrieves the user data from the backend
-  // and updates the component's state with the retrieved data.
-  // It also sets the loader state to true while the data is being fetched,
-  // and sets it back to false when the data has been fetched.
-
-  // only run when component first mounts
+  // useEffect to fetch user data from Firestore when the component mounts.
   useEffect(() => {
     setLoader(true);
-    // When component mounts, get data from local storage
     getUserData();
-    // setLoader(false);
   }, []);
 
   // This function toggles the visibility of a password based on the index.
-  // It updates the visiblePasswords state object to keep track of which passwords are visible.
+  // togglePasswordVisibility function to toggle the visibility of passwords.
   const togglePasswordVisibility = (index) => {
-    // When user clicks the eye icon, toggle the password visibility
     setVisiblePasswords((prev) => ({
       ...prev,
       [index]: !prev[index],

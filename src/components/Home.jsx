@@ -12,10 +12,8 @@ import {
   getDocs,
   collection,
   addDoc,
-  doc,
 } from "firebase/firestore";
-import { getAuth, onAuthStateChanged } from "firebase/auth";
-import { data, useNavigate } from "react-router";
+import { getAuth } from "firebase/auth";
 
 /**
  * Home component manages the state for website, username, and password inputs.
@@ -24,6 +22,10 @@ import { data, useNavigate } from "react-router";
  * via toast notifications on successful or unsuccessful form submission.
  * The component also retrieves and displays stored data from local storage.
  */
+
+// Home.jsx
+// This component allows users to add new login credentials.
+// It includes form validation and saves data to Firestore.
 
 const Home = () => {
   const [website, setWebsite] = useState("");
@@ -35,9 +37,8 @@ const Home = () => {
   const [usernameError, setUsernameError] = useState("");
   const [passwordError, setPasswordError] = useState("");
   const auth = getAuth(app);
-  const navigate = useNavigate();
 
-  // Live validation
+  // useEffect to perform live validation on form inputs.
   useEffect(() => {
     // Website validation
     if (website && !/^https?:\/\/.+\..+/.test(website)) {

@@ -2,83 +2,76 @@ import {
   GoogleAuthProvider,
   GithubAuthProvider,
   signInWithPopup,
-  signInWithRedirect,
-  getRedirectResult,
   createUserWithEmailAndPassword,
   getAuth,
-} from "firebase/auth";
-import { useEffect, useContext } from "react";
-import { useNavigate, Link } from "react-router-dom";
-import { FaGoogle, FaGithub } from "react-icons/fa";
-import { nanoid } from "nanoid";
-import { app, database } from "../firebaseConfig/config";
-import { collection, query, where, getDocs, addDoc } from "firebase/firestore";
-import { myContext } from "../contextprovider/sessionprovider";
-import { toast } from "react-toastify"; // Import toast
+} from "firebase/auth"; // Import Firebase authentication methods
+import { useContext } from "react"; // Import useContext for accessing context
+import { useNavigate, Link } from "react-router-dom"; // Import navigation and linking utilities
+import { FaGoogle, FaGithub } from "react-icons/fa"; // Import Google and GitHub icons
+import { nanoid } from "nanoid"; // Import nanoid for generating unique IDs
+import { app, database } from "../firebaseConfig/config"; // Import Firebase app and database configuration
+import { collection, query, where, getDocs, addDoc } from "firebase/firestore"; // Import Firestore methods
+import { myContext } from "../contextprovider/sessionprovider"; // Import custom context provider
+import { toast } from "react-toastify"; // Import toast for notifications
 
 const Signup = () => {
   const { emailPass, setEmailPass, isLoggedIn, setIsLoggedIn } =
-    useContext(myContext);
-  const auth = getAuth(app);
-  const navigate = useNavigate();
+    useContext(myContext); // Access context values for email/password and login state
+  const auth = getAuth(app); // Initialize Firebase authentication
+  const navigate = useNavigate(); // Initialize navigation utility
 
   const handleChange = (e) => {
     setEmailPass((prev) => ({
       ...prev,
       [e.target.name]: e.target.value,
-    }));
+    })); // Update email/password state on input change
   };
 
   const ResetEmailPass = () => {
-    setEmailPass({ username: "", password: "" });
+    setEmailPass({ username: "", password: "" }); // Reset email/password state
   };
 
   const DbWork = async (username, password, imageURL, uid) => {
     try {
-      // Validate username
       if (!username) {
-        toast.error("Username is missing. Please try again.");
+        toast.error("Username is missing. Please try again."); // Show error if username is missing
         return;
       }
 
-      const passwordDB = collection(database, "passwordDB");
-
+      const passwordDB = collection(database, "passwordDB"); // Reference to Firestore collection
       const userExistQuery = query(
         passwordDB,
         where("username", "==", username)
-      );
-
-      const querySnapshot = await getDocs(userExistQuery);
+      ); // Query to check if user already exists
+      const querySnapshot = await getDocs(userExistQuery); // Execute query
 
       if (!querySnapshot.empty) {
-        toast.error("User already exists in database!");
+        toast.error("User already exists in database!"); // Show error if user exists
         return;
       }
 
-      // Create main user document
-      const myListRef = await addDoc(passwordDB, {
+      await addDoc(passwordDB, {
         username: username,
         password: password,
         url: imageURL || "",
         uid: uid || nanoid(16),
-      });
+      }); // Add new user to Firestore
 
-      setIsLoggedIn(true);
-      toast.success("Successfully signed up!");
-      navigate("/");
-      ResetEmailPass();
+      setIsLoggedIn(true); // Update login state
+      toast.success("Successfully signed up!"); // Show success message
+      navigate("/"); // Navigate to home page
+      ResetEmailPass(); // Reset email/password state
     } catch (error) {
-      console.error("Error in DbWork:", error.message);
-      toast.error("Something went wrong. Try again.");
+      console.error("Error in DbWork:", error.message); // Log error
+      toast.error("Something went wrong. Try again."); // Show error message
     }
   };
 
   const handleSignup = async (e) => {
-    e.preventDefault();
-
+    e.preventDefault(); // Prevent default form submission
     try {
       if (emailPass.username === "" || emailPass.password === "") {
-        toast.error("Please fill in all fields");
+        toast.error("Please fill in all fields"); // Show error if fields are empty
         return;
       }
 
@@ -86,113 +79,68 @@ const Signup = () => {
         auth,
         emailPass.username,
         emailPass.password
-      );
+      ); // Create user with email and password
 
-      const uid = userCredential.user.uid;
-      DbWork(emailPass.username, emailPass.password, "", uid);
+      const uid = userCredential.user.uid; // Get user ID
+      DbWork(emailPass.username, emailPass.password, "", uid); // Perform database operations
     } catch (err) {
       if (err.code === "auth/email-already-in-use") {
-        toast.error("User already exists!");
+        toast.error("User already exists!"); // Show error if email is already in use
       } else {
-        toast.error(err.message);
+        toast.error(err.message); // Show other errors
       }
     }
   };
 
-  // ✅ Detect mobile
-  const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-  console.log(navigator.userAgent);
-
   const handleGoogleSignup = async () => {
-    const googleProvider = new GoogleAuthProvider();
+    const googleProvider = new GoogleAuthProvider(); // Initialize Google provider
     try {
-      if (isMobile) {
-        await signInWithRedirect(auth, googleProvider);
-      } else {
-        const response = await signInWithPopup(auth, googleProvider);
-        // Ensure email is available before proceeding
-        if (!response.user.email) {
-          toast.error(
-            "Failed to retrieve email from Google. Please try another method."
-          );
-          return;
-        }
+      const response = await signInWithPopup(auth, googleProvider); // Sign in with Google
 
-        await DbWork(
-          response.user.email,
-          nanoid(16),
-          response.user.photoURL,
-          response.user.uid
-        );
-        toast.success("Successfully signed up with Google!");
-        navigate("/");
+      if (!response.user.email) {
+        toast.error("Failed to retrieve email from Google."); // Show error if email is missing
+        return;
       }
+
+      await DbWork(
+        response.user.email,
+        nanoid(16),
+        response.user.photoURL,
+        response.user.uid
+      ); // Perform database operations
+      toast.success("Successfully signed up with Google!"); // Show success message
+      navigate("/"); // Navigate to home page
     } catch (err) {
-      console.error("Google signup error:", err);
-      toast.error(err.message);
+      console.error("Google signup error:", err); // Log error
+      toast.error(err.message); // Show error message
     }
   };
 
   const handleGithubSignup = async () => {
-    const githubProvider = new GithubAuthProvider();
-    // Request email scope explicitly for GitHub
-    githubProvider.addScope("user:email");
+    const githubProvider = new GithubAuthProvider(); // Initialize GitHub provider
+    githubProvider.addScope("user:email"); // Add email scope to GitHub provider
 
     try {
-      if (isMobile) {
-        await signInWithRedirect(auth, githubProvider);
-      } else {
-        const response = await signInWithPopup(auth, githubProvider);
-        // Ensure email is available before proceeding
-        if (!response.user.email) {
-          toast.error(
-            "Failed to retrieve email from GitHub. Please try another method."
-          );
-          return;
-        }
+      const response = await signInWithPopup(auth, githubProvider); // Sign in with GitHub
 
-        await DbWork(
-          response.user.email,
-          nanoid(16),
-          response.user.photoURL,
-          response.user.uid
-        );
-        toast.success("Successfully signed up with GitHub!");
-        navigate("/");
+      if (!response.user.email) {
+        toast.error("Failed to retrieve email from GitHub."); // Show error if email is missing
+        return;
       }
+
+      await DbWork(
+        response.user.email,
+        nanoid(16),
+        response.user.photoURL,
+        response.user.uid
+      ); // Perform database operations
+      toast.success("Successfully signed up with GitHub!"); // Show success message
+      navigate("/"); // Navigate to home page
     } catch (err) {
-      console.error("GitHub signup error:", err);
-      toast.error(err.message);
+      console.error("GitHub signup error:", err); // Log error
+      toast.error(err.message); // Show error message
     }
   };
-
-  // ✅ Handle redirect result (after Google/Github sign in from mobile)
-  useEffect(() => {
-    getRedirectResult(auth)
-      .then((result) => {
-        if (result && result.user) {
-          // Ensure email is available before proceeding
-          if (!result.user.email) {
-            toast.error("Failed to retrieve email. Please try another method.");
-            return;
-          }
-
-          DbWork(
-            result.user.email,
-            nanoid(16),
-            result.user.photoURL,
-            result.user.uid
-          );
-          navigate("/");
-        }
-      })
-      .catch((err) => {
-        console.error("Redirect SignIn Error:", err.message);
-        if (err.message) {
-          toast.error(err.message);
-        }
-      });
-  }, []);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-600 via-indigo-700 to-indigo-900 px-4">
@@ -263,3 +211,4 @@ const Signup = () => {
 };
 
 export default Signup;
+

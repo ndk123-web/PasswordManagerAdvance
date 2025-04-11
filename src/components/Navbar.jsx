@@ -17,6 +17,10 @@ import { signOut, getAuth, onAuthStateChanged } from "firebase/auth";
 import { app, database } from "../firebaseConfig/config";
 import { query, where, collection, getDocs } from "firebase/firestore";
 
+// Navbar.jsx
+// This component renders the navigation bar for the application.
+// It includes links to different pages, a logo, and login/logout functionality.
+
 export const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const { isLoggedIn, setIsLoggedIn } = useContext(myContext);
@@ -28,13 +32,7 @@ export const Navbar = () => {
     setIsOpen(false);
   };
 
-  // useEffect( () => {
-  //   if(isLoggedIn == true){
-  //     setIsLoggedIn(false);
-  //   }
-  // } , [isLoggedIn])
-
-  // fetching data from firebase firestore
+  // useEffect to fetch user data from Firebase Firestore when the component mounts.
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
@@ -66,6 +64,7 @@ export const Navbar = () => {
     return () => unsubscribe();
   }, []);
 
+  // handleLogOut function to log out the user and navigate to the login page.
   const handleLogOut = async () => {
     onAuthStateChanged(auth, async (user) => {
       console.log(user);

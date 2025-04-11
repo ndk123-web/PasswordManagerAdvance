@@ -1,195 +1,129 @@
 // Login.jsx
-import React, { useEffect, useContext, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { FaGithub, FaGoogle } from "react-icons/fa";
-import Lottie from "lottie-react";
-import lockAnimation from "../assets/shield-animation.json";
-import { myContext } from "../contextprovider/sessionprovider";
+import React, { useEffect, useContext, useState } from "react"; // Import necessary React hooks
+import { Link, useNavigate } from "react-router-dom"; // Import navigation and linking utilities
+import { FaGithub, FaGoogle } from "react-icons/fa"; // Import Google and GitHub icons
+import { myContext } from "../contextprovider/sessionprovider"; // Import custom context provider
 import {
   getAuth,
   onAuthStateChanged,
   signInWithPopup,
-  signInWithRedirect,
-  getRedirectResult,
   signInWithEmailAndPassword,
   GoogleAuthProvider,
   GithubAuthProvider,
-} from "firebase/auth";
-import { collection, getDocs, query, where } from "firebase/firestore";
-import { app, database } from "../firebaseConfig/config";
-
-// Utility function to check mobile device
-const isMobile = () => {
-  return /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-};
+  browserLocalPersistence,
+  setPersistence,
+} from "firebase/auth"; // Import Firebase authentication methods
+import { collection, getDocs, query, where } from "firebase/firestore"; // Import Firestore methods
+import { app, database } from "../firebaseConfig/config"; // Import Firebase app and database configuration
 
 const Login = () => {
   const { emailPass, setEmailPass, isLoggedIn, setIsLoggedIn } =
-    useContext(myContext);
-  const auth = getAuth(app);
-  const navigate = useNavigate();
-  const [loading, setLoading] = useState(true);
+    useContext(myContext); // Access context values for email/password and login state
+  const auth = getAuth(app); // Initialize Firebase authentication
+  const navigate = useNavigate(); // Initialize navigation utility
+  const [loading, setLoading] = useState(true); // State to manage loading status
 
-  // Function to check if user exists in Firestore and redirect accordingly
   const DBWork = async (response) => {
     try {
-      console.log("DBWork starting with email:", response.user.email);
-      const passwordDB = collection(database, "passwordDB");
+      const passwordDB = collection(database, "passwordDB"); // Reference to Firestore collection
       const userExistQuery = query(
         passwordDB,
         where("username", "==", response.user.email)
-      );
-      const userSnapshot = await getDocs(userExistQuery);
+      ); // Query to check if user exists
+      const userSnapshot = await getDocs(userExistQuery); // Execute query
 
       if (!userSnapshot.empty) {
-        console.log("USER EXISTS - Navigating to home page");
-        setIsLoggedIn(true);
-        setLoading(false);
-        navigate("/", { replace: true }); // Use replace to prevent back navigation
+        setIsLoggedIn(true); // Update login state
+        setLoading(false); // Stop loading
+        navigate("/", { replace: true }); // Navigate to home page
       } else {
-        console.log("USER DOES NOT EXIST - Navigating to signup");
-        setLoading(false);
-        navigate("/signup", { replace: true });
+        setLoading(false); // Stop loading
+        navigate("/signup", { replace: true }); // Navigate to signup page
       }
     } catch (err) {
-      console.error("DBWork error:", err);
-      alert("Database Error: " + err.message);
-      setIsLoggedIn(false);
-      setLoading(false);
+      console.error("DBWork error:", err); // Log error
+      alert("Database Error: " + err.message); // Show error message
+      setIsLoggedIn(false); // Reset login state
+      setLoading(false); // Stop loading
     }
   };
 
-  // At the top of your Login component
   useEffect(() => {
     const initAuth = async () => {
-      const { browserLocalPersistence, setPersistence } = await import(
-        "firebase/auth"
-      );
       try {
-        await setPersistence(auth, browserLocalPersistence);
-        console.log("Set persistence to LOCAL");
+        await setPersistence(auth, browserLocalPersistence); // Set persistence for authentication
       } catch (error) {
-        console.error("Failed to set persistence:", error);
+        console.error("Failed to set persistence:", error); // Log error
       }
     };
 
-    initAuth();
+    initAuth(); // Initialize authentication persistence
   }, []);
 
-  // Handle redirect results on component mount
-  // In your useEffect
   useEffect(() => {
-    const auth = getAuth(app);
-    console.log("Login component initialized");
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        DBWork({ user: { email: user.email } }); // Perform database operations if user is logged in
+      } else {
+        setLoading(false); // Stop loading if no user is logged in
+      }
+    });
 
-    // First check redirect result with proper error handling
-    getRedirectResult(auth)
-      .then((result) => {
-        if (result?.user) {
-          console.log("REDIRECT SUCCESS - User:", result.user.email);
-          return DBWork(result);
-        } else {
-          console.log("No redirect result found");
-        }
-      })
-      .catch((error) => {
-        console.error("Redirect error:", error.code, error.message);
-        // Don't alert on redirect errors - often happens on first load
-      })
-      .finally(() => {
-        // Always check auth state after redirect check completes
-        const unsubscribe = onAuthStateChanged(auth, (user) => {
-          if (user) {
-            console.log("Auth state changed - User is signed in:", user.email);
-            DBWork({ user: { email: user.email } });
-          } else {
-            console.log("Auth state changed - No user signed in");
-            setLoading(false);
-          }
-        });
-
-        return () => unsubscribe();
-      });
+    return () => unsubscribe(); // Cleanup subscription on component unmount
   }, []);
 
-  // Handle login with Google
   const handleGoogleLogin = async (e) => {
-    e.preventDefault();
-    setLoading(true);
+    e.preventDefault(); // Prevent default form submission
+    setLoading(true); // Start loading
 
     try {
-      console.log("Attempting Google login");
-      const googleProvider = new GoogleAuthProvider();
-
-      if (isMobile()) {
-        console.log("Mobile device detected, using signInWithRedirect");
-        await signInWithRedirect(auth, googleProvider);
-        // The redirect will happen here, so code below won't execute until return
-      } else {
-        console.log("Desktop device detected, using signInWithPopup");
-        const response = await signInWithPopup(auth, googleProvider);
-        console.log("Popup success, user:", response.user.email);
-        await DBWork(response);
-      }
+      const googleProvider = new GoogleAuthProvider(); // Initialize Google provider
+      const response = await signInWithPopup(auth, googleProvider); // Sign in with Google
+      await DBWork(response); // Perform database operations
     } catch (err) {
-      console.error("Google login error:", err);
-      alert("Google Login Error: " + err.message);
-      setLoading(false);
+      console.error("Google login error:", err); // Log error
+      alert("Google Login Error: " + err.message); // Show error message
+      setLoading(false); // Stop loading
     }
   };
 
-  // Handle login with GitHub
   const handleGithubLogin = async (e) => {
-    e.preventDefault();
-    setLoading(true);
+    e.preventDefault(); // Prevent default form submission
+    setLoading(true); // Start loading
 
     try {
-      console.log("Attempting GitHub login");
-      const githubProvider = new GithubAuthProvider();
-
-      if (isMobile()) {
-        console.log("Mobile device detected, using signInWithRedirect");
-        await signInWithRedirect(auth, githubProvider);
-        // The redirect will happen here, so code below won't execute until return
-      } else {
-        console.log("Desktop device detected, using signInWithPopup");
-        const response = await signInWithPopup(auth, githubProvider);
-        console.log("Popup success, user:", response.user.email);
-        await DBWork(response);
-      }
+      const githubProvider = new GithubAuthProvider(); // Initialize GitHub provider
+      const response = await signInWithPopup(auth, githubProvider); // Sign in with GitHub
+      await DBWork(response); // Perform database operations
     } catch (err) {
-      console.error("GitHub login error:", err);
-      alert("GitHub Login Error: " + err.message);
-      setLoading(false);
+      console.error("GitHub login error:", err); // Log error
+      alert("GitHub Login Error: " + err.message); // Show error message
+      setLoading(false); // Stop loading
     }
   };
 
-  // Handle form input changes for email/password login
   const handleChange = (e) => {
     setEmailPass((prev) => ({
       ...prev,
       [e.target.name]: e.target.value,
-    }));
+    })); // Update email/password state on input change
   };
 
-  // Handle email/password login form submission
   const handleLoginSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
+    e.preventDefault(); // Prevent default form submission
+    setLoading(true); // Start loading
 
     try {
-      console.log("Attempting email/password login");
       const userCredential = await signInWithEmailAndPassword(
         auth,
         emailPass.username,
         emailPass.password
-      );
-      console.log("Email login success, user:", userCredential.user.email);
-      await DBWork({ user: { email: userCredential.user.email } });
+      ); // Sign in with email and password
+      await DBWork({ user: { email: userCredential.user.email } }); // Perform database operations
     } catch (err) {
-      console.error("Email login error:", err);
-      alert("Email Login Error: " + err.message);
-      setLoading(false);
+      console.error("Email login error:", err); // Log error
+      alert("Email Login Error: " + err.message); // Show error message
+      setLoading(false); // Stop loading
     }
   };
 
@@ -200,7 +134,6 @@ const Login = () => {
           Login to <span className="text-yellow-400">PassGuard</span>
         </h2>
 
-        {/* Google and GitHub OAuth Buttons */}
         <div className="flex justify-center gap-6 mb-6">
           <button
             onClick={handleGoogleLogin}
@@ -220,7 +153,6 @@ const Login = () => {
           </button>
         </div>
 
-        {/* Divider */}
         <div className="flex items-center justify-center mb-6">
           <span className="flex-1 border-b border-white/30"></span>
           <span className="mx-3 text-sm text-gray-200 animate-bounce">
@@ -229,7 +161,6 @@ const Login = () => {
           <span className="flex-1 border-b border-white/30"></span>
         </div>
 
-        {/* Email and Password Login Form */}
         <form onSubmit={handleLoginSubmit} className="space-y-5">
           <input
             type="email"
@@ -262,7 +193,6 @@ const Login = () => {
           </button>
         </form>
 
-        {/* Redirect to Sign Up */}
         <p className="mt-5 text-sm text-center text-gray-300">
           Don't have an account?{" "}
           <Link to="/signup" className="text-yellow-400 hover:underline">

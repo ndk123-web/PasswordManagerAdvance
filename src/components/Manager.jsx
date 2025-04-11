@@ -1,3 +1,6 @@
+// Manager.jsx
+// This component renders a background gradient for the application.
+
 import React from "react";
 
 const Manager = () => {
