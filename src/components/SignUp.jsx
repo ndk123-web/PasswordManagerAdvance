@@ -1,5 +1,3 @@
-// problem with google and signup duplicate user is accessing
-// solution -> need to add query and where and validate in DBWork Function
 import {
   GoogleAuthProvider,
   GithubAuthProvider,
@@ -16,6 +14,7 @@ import { nanoid } from "nanoid";
 import { app, database } from "../firebaseConfig/config";
 import { collection, query, where, getDocs, addDoc } from "firebase/firestore";
 import { myContext } from "../contextprovider/sessionprovider";
+import { toast } from "react-toastify"; // Import toast
 
 const Signup = () => {
   const { emailPass, setEmailPass, isLoggedIn, setIsLoggedIn } =
@@ -36,35 +35,41 @@ const Signup = () => {
 
   const DbWork = async (username, password, imageURL, uid) => {
     try {
+      // Validate username
+      if (!username) {
+        toast.error("Username is missing. Please try again.");
+        return;
+      }
+
       const passwordDB = collection(database, "passwordDB");
 
       const userExistQuery = query(
         passwordDB,
-        where("username", "==", emailPass.username || username)
+        where("username", "==", username)
       );
 
       const querySnapshot = await getDocs(userExistQuery);
 
       if (!querySnapshot.empty) {
-        alert("User already exists in database!");
+        toast.error("User already exists in database!");
         return;
       }
 
       // Create main user document
       const myListRef = await addDoc(passwordDB, {
-        username: emailPass.username || username,
-        password: emailPass.password || password,
+        username: username,
+        password: password,
         url: imageURL || "",
         uid: uid || nanoid(16),
       });
 
       setIsLoggedIn(true);
-      alert("Success Sign Up");
+      toast.success("Successfully signed up!");
       navigate("/");
       ResetEmailPass();
     } catch (error) {
       console.error("Error in DbWork:", error.message);
-      alert("Something went wrong. Try again.");
+      toast.error("Something went wrong. Try again.");
     }
   };
 
@@ -73,7 +78,7 @@ const Signup = () => {
 
     try {
       if (emailPass.username === "" || emailPass.password === "") {
-        alert("Enter Fields");
+        toast.error("Please fill in all fields");
         return;
       }
 
@@ -87,9 +92,9 @@ const Signup = () => {
       DbWork(emailPass.username, emailPass.password, "", uid);
     } catch (err) {
       if (err.code === "auth/email-already-in-use") {
-        alert("User already exists!");
+        toast.error("User already exists!");
       } else {
-        alert(err.message);
+        toast.error(err.message);
       }
     }
   };
@@ -105,38 +110,59 @@ const Signup = () => {
         await signInWithRedirect(auth, googleProvider);
       } else {
         const response = await signInWithPopup(auth, googleProvider);
+        // Ensure email is available before proceeding
+        if (!response.user.email) {
+          toast.error(
+            "Failed to retrieve email from Google. Please try another method."
+          );
+          return;
+        }
+
         await DbWork(
           response.user.email,
           nanoid(16),
           response.user.photoURL,
-          response.user.uid,
+          response.user.uid
         );
-        alert("Successfully Sign Up With Google");
+        toast.success("Successfully signed up with Google!");
         navigate("/");
       }
     } catch (err) {
-      alert(err.message);
+      console.error("Google signup error:", err);
+      toast.error(err.message);
     }
   };
 
   const handleGithubSignup = async () => {
     const githubProvider = new GithubAuthProvider();
+    // Request email scope explicitly for GitHub
+    githubProvider.addScope("user:email");
+
     try {
       if (isMobile) {
         await signInWithRedirect(auth, githubProvider);
       } else {
         const response = await signInWithPopup(auth, githubProvider);
+        // Ensure email is available before proceeding
+        if (!response.user.email) {
+          toast.error(
+            "Failed to retrieve email from GitHub. Please try another method."
+          );
+          return;
+        }
+
         await DbWork(
           response.user.email,
           nanoid(16),
           response.user.photoURL,
-          response.user.uid,
+          response.user.uid
         );
-        alert("Success Github Sign Up");
+        toast.success("Successfully signed up with GitHub!");
         navigate("/");
       }
     } catch (err) {
-      alert(err.message);
+      console.error("GitHub signup error:", err);
+      toast.error(err.message);
     }
   };
 
@@ -145,6 +171,12 @@ const Signup = () => {
     getRedirectResult(auth)
       .then((result) => {
         if (result && result.user) {
+          // Ensure email is available before proceeding
+          if (!result.user.email) {
+            toast.error("Failed to retrieve email. Please try another method.");
+            return;
+          }
+
           DbWork(
             result.user.email,
             nanoid(16),
@@ -155,7 +187,10 @@ const Signup = () => {
         }
       })
       .catch((err) => {
-        console.log("Redirect SignIn Error:", err.message);
+        console.error("Redirect SignIn Error:", err.message);
+        if (err.message) {
+          toast.error(err.message);
+        }
       });
   }, []);
 
